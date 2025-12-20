@@ -2623,6 +2623,7 @@ function renderShelf(){
 
 function renderCurrentLinks(){
 
+  bindLinksDropTargets();
   const sec=currentSectionRef(); const arr=sec?.links||[];
 
   linksDiv.innerHTML = arr.map((w,i)=>`
@@ -2738,58 +2739,45 @@ function renderCurrentLinks(){
 
 
 
-  // Accept drops (more permissive)
-
-  if(isEditingSection){
-
-    let over=0;
-
-    linksDiv.addEventListener('dragenter', ()=>{ over++; linksDiv.classList.add('drag-over-outline'); });
-
-    linksDiv.addEventListener('dragleave', ()=>{ over=Math.max(0,over-1); if(!over) linksDiv.classList.remove('drag-over-outline'); });
-
-    linksDiv.addEventListener('dragover', (e)=>{ e.preventDefault(); e.dataTransfer.dropEffect='copy'; });
-
-    linksDiv.addEventListener('drop', (e)=>{
-
-      e.preventDefault(); linksDiv.classList.remove('drag-over-outline');
-
-      let p=null; try{ p = parseDropPayload(e.dataTransfer); }catch{}
-
-      if(!p) return;
-
-
-
-      if(p.type==='shelf'){
-
-        const wid = p.id; const w = widgetShelf.find(x=>x.id===wid); if(!w) return;
-
-        sec.links = sec.links || [];
-
-        sec.links.push({ label:w.label, url:normalizeUrl(w.url||''), emoji:w.emoji, icon:w.icon, img:w.img });
-
-      }else if(p.type==='reorder'){
-
-        const from = Number(p.index);
-
-        if(!Number.isNaN(from) && from>=0 && from<sec.links.length){
-
-          sec.links.push( sec.links.splice(from,1)[0] ); // move to end
-
-        }
-
-      }
-
-      saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent();
-
-    });
-
-  }
-
-
-
   renderFocusLinks();
 
+}
+
+function bindLinksDropTargets(){
+  if(linksDiv?.dataset?.dropBound === '1') return;
+  if(!linksDiv) return;
+  linksDiv.dataset.dropBound = '1';
+  let over=0;
+  linksDiv.addEventListener('dragenter', ()=>{
+    if(!isEditingSection) return;
+    over++; linksDiv.classList.add('drag-over-outline');
+  });
+  linksDiv.addEventListener('dragleave', ()=>{
+    if(!isEditingSection) return;
+    over=Math.max(0,over-1); if(!over) linksDiv.classList.remove('drag-over-outline');
+  });
+  linksDiv.addEventListener('dragover', (e)=>{
+    if(!isEditingSection) return;
+    e.preventDefault(); e.dataTransfer.dropEffect='copy';
+  });
+  linksDiv.addEventListener('drop', (e)=>{
+    if(!isEditingSection) return;
+    e.preventDefault(); linksDiv.classList.remove('drag-over-outline'); over=0;
+    let p=null; try{ p = parseDropPayload(e.dataTransfer); }catch{}
+    if(!p) return;
+    const sec = currentSectionRef(); if(!sec) return;
+    if(p.type==='shelf'){
+      const wid = p.id; const w = widgetShelf.find(x=>x.id===wid); if(!w) return;
+      sec.links = sec.links || [];
+      sec.links.push({ label:w.label, url:normalizeUrl(w.url||''), emoji:w.emoji, icon:w.icon, img:w.img });
+    }else if(p.type==='reorder'){
+      const from = Number(p.index);
+      if(!Number.isNaN(from) && from>=0 && from<sec.links.length){
+        sec.links.push( sec.links.splice(from,1)[0] ); // move to end
+      }
+    }
+    saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent();
+  });
 }
 
 
@@ -3369,7 +3357,17 @@ function openAiPreview(outline, usedModel){
               <button class="bin" data-act="del-link" title="Delete">🗑️</button>
             </div>`; }).join('');
 
-        // Reorder within links
+        bindAiPreviewLinksDnD();
+        linksHost.querySelectorAll('.section-link').forEach(pill=>{
+          pill.addEventListener('dragstart', (e)=>{ const index = Number(pill.dataset.idx); try{ e.dataTransfer.setData('text/plain', JSON.stringify({type:'reorder', index})); }catch{} e.dataTransfer.effectAllowed='move'; pill.classList.add('drag-ghost'); });
+          pill.addEventListener('dragend', ()=> pill.classList.remove('drag-ghost'));
+          pill.addEventListener('click', ()=>{ const s3=__aiDraft.sections[i]; if(!s3) return; const idx = Number(pill.dataset.idx); const w = s3.links?.[idx]; if(!w) return; openWidgetEditor && openWidgetEditor(w, (upd)=>{ upd.url = normalizeUrl(upd.url); Object.assign(w, upd); renderLinks(); }); });
+        });
+        linksHost.querySelectorAll('[data-act="del-link"]').forEach(btn=>{ btn.addEventListener('click', ()=>{ const s3=__aiDraft.sections[i]; if(!s3) return; const idx = Number(btn.closest('.widget')?.dataset.linkIdx||-1); if(idx>=0){ s3.links.splice(idx,1); renderLinks(); } }); });
+      };
+      function bindAiPreviewLinksDnD(){
+        if(!linksHost || linksHost.dataset.dropBound === '1') return;
+        linksHost.dataset.dropBound = '1';
         let over=0;
         linksHost.addEventListener('dragenter', ()=>{ over++; });
         linksHost.addEventListener('dragleave', ()=>{ over=Math.max(0,over-1); });
@@ -3391,13 +3389,7 @@ function openAiPreview(outline, usedModel){
             renderLinks();
           }
         });
-        linksHost.querySelectorAll('.section-link').forEach(pill=>{
-          pill.addEventListener('dragstart', (e)=>{ const index = Number(pill.dataset.idx); try{ e.dataTransfer.setData('text/plain', JSON.stringify({type:'reorder', index})); }catch{} e.dataTransfer.effectAllowed='move'; pill.classList.add('drag-ghost'); });
-          pill.addEventListener('dragend', ()=> pill.classList.remove('drag-ghost'));
-          pill.addEventListener('click', ()=>{ const s3=__aiDraft.sections[i]; if(!s3) return; const idx = Number(pill.dataset.idx); const w = s3.links?.[idx]; if(!w) return; openWidgetEditor && openWidgetEditor(w, (upd)=>{ upd.url = normalizeUrl(upd.url); Object.assign(w, upd); renderLinks(); }); });
-        });
-        linksHost.querySelectorAll('[data-act="del-link"]').forEach(btn=>{ btn.addEventListener('click', ()=>{ const s3=__aiDraft.sections[i]; if(!s3) return; const idx = Number(btn.closest('.widget')?.dataset.linkIdx||-1); if(idx>=0){ s3.links.splice(idx,1); renderLinks(); } }); });
-      };
+      }
       const renderShelf = ()=>{
         const shelf = Array.isArray(widgetShelf) ? widgetShelf : [];
         shelfHost.innerHTML = `
