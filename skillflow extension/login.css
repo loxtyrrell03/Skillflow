@@ -1,0 +1,71 @@
+.auth-shell{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:24px;
+}
+
+.auth-card{
+  width:min(420px, 100%);
+  padding:24px;
+  display:grid;
+  gap:16px;
+}
+
+.auth-header{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+
+.auth-logo{
+  width:56px;
+  height:56px;
+  border-radius:14px;
+  border:var(--borderW) solid var(--border);
+  background:#fff;
+  object-fit:cover;
+}
+
+.auth-title{font-size:1.5rem; font-weight:800}
+.auth-sub{font-size:.9rem; color:var(--muted)}
+
+.auth-form{display:grid; gap:12px}
+.field{display:grid; gap:6px; font-size:.9rem}
+
+.auth-actions{display:grid; gap:8px}
+
+.btn.google{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  width:100%;
+  font-weight:700;
+}
+.google-icon{
+  width:20px;
+  height:20px;
+}
+
+.signed-in-banner{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  font-weight:600;
+}
+
+.signed-in-email{font-size:.95rem; color:var(--muted)}
+.signed-in-actions{display:grid; gap:10px; margin-top:8px}
+
+.auth-footer{
+  text-align:center;
+  font-size:.85rem;
+  color:var(--muted);
+}
+
+@media (max-width:480px){
+  .auth-card{padding:18px}
+  .auth-logo{width:48px; height:48px}
+}

@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skillflow Panel</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="panel.css" />
+</head>
+<body>
+  <header class="panel-topbar">
+    <div class="brand">
+      <img src="assets/logo.png" alt="Skillflow" class="brand-logo" />
+      <div class="brand-text">
+        <div class="brand-title">Skillflow</div>
+        <div class="brand-sub">Focus side panel</div>
+      </div>
+    </div>
+  </header>
+
+  <main class="panel-body">
+    <div id="status" class="status muted hidden"></div>
+
+    <section class="card account-card">
+      <div class="card-header">
+        <div>
+          <div class="block-sub">Account</div>
+          <div class="block-title">Sync status</div>
+        </div>
+      </div>
+      <div class="account-body">
+        <div id="accountState" class="muted">Not signed in</div>
+        <div class="account-actions">
+          <button id="openLoginBtn" class="btn small" type="button">Sign in</button>
+          <button id="signOutBtn" class="btn small danger hidden" type="button">Sign out</button>
+        </div>
+      </div>
+      <div id="accountHint" class="account-hint muted">Sign in to sync sessions from Skillflow.</div>
+    </section>
+
+    <section class="card timer-card">
+      <div class="card-header">
+        <div>
+          <div class="block-sub">Focus timer</div>
+          <div id="currentTitle" class="block-title">Ready to focus</div>
+        </div>
+        <span id="sectionBadge" class="chip">0 / 0</span>
+      </div>
+      <div class="timer-display">
+        <div id="timerClock" class="timer-clock">00:00</div>
+        <div id="timerMeta" class="timer-meta muted">Select a session</div>
+      </div>
+      <div class="progress-host">
+        <div id="progressFill" class="progress-fill"></div>
+        <div id="progressSegments" class="progress-segments"></div>
+      </div>
+      <div class="timer-controls">
+        <button id="prevBtn" class="btn small" type="button">Prev</button>
+        <button id="startBtn" class="btn primary" type="button">Start</button>
+        <button id="pauseBtn" class="btn small ghost hidden" type="button">Pause</button>
+        <button id="nextBtn" class="btn small" type="button">Next</button>
+        <button id="stopBtn" class="btn small danger" type="button">Stop</button>
+      </div>
+    </section>
+
+    <section class="card session-card">
+      <div class="card-header">
+        <div>
+          <div class="block-sub">Sessions</div>
+          <div class="block-title">Choose a session</div>
+        </div>
+        <button id="refreshBtn" class="btn small" type="button">Refresh</button>
+      </div>
+      <div class="session-picker">
+        <select id="sessionSelect" class="input"></select>
+        <button id="loadSessionBtn" class="btn primary" type="button">Load</button>
+      </div>
+      <div class="session-meta">
+        <div id="sessionMeta" class="muted">No session loaded.</div>
+        <button id="openSkillflowBtn" class="btn small ghost" type="button">Open Skillflow</button>
+      </div>
+    </section>
+
+    <section class="card sections-card">
+      <div class="card-header">
+        <div>
+          <div class="block-sub">Session outline</div>
+          <div class="block-title">Sections</div>
+        </div>
+        <span id="totalDuration" class="chip">0 min</span>
+      </div>
+      <ul id="sectionsList" class="sections-list"></ul>
+      <div id="emptySections" class="empty-state muted">No sections loaded.</div>
+    </section>
+  </main>
+
+  <script type="module" src="panel.js"></script>
+</body>
+</html>

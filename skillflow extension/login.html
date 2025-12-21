@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skillflow Login</title>
+  <link rel="stylesheet" href="base.css" />
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <main class="auth-shell">
+    <div class="card auth-card">
+      <header class="auth-header">
+        <img src="assets/logo.png" alt="Skillflow" class="auth-logo" />
+        <div>
+          <div class="auth-title">Skillflow</div>
+          <div class="auth-sub">Sign in to sync your sessions.</div>
+        </div>
+      </header>
+
+      <div id="status" class="status muted hidden"></div>
+
+      <div id="signedOutView" class="auth-form">
+        <button id="googleAuthBtn" class="btn google" type="button">
+          <img alt="" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="google-icon" />
+          Continue with Google
+        </button>
+      </div>
+
+      <div id="signedInView" class="hidden">
+        <div class="signed-in-banner">
+          <span class="chip">Signed in</span>
+          <span id="signedInEmail" class="signed-in-email"></span>
+        </div>
+        <div class="signed-in-actions">
+          <button id="openPanelBtn" class="btn primary" type="button">Open panel page</button>
+          <button id="signOutBtn" class="btn danger" type="button">Sign out</button>
+        </div>
+      </div>
+
+      <div class="auth-footer">
+        <a href="https://chessstudyplanner.firebaseapp.com" target="_blank" rel="noreferrer">Open Skillflow on the web</a>
+      </div>
+    </div>
+  </main>
+
+  <script type="module" src="login.js"></script>
+</body>
+</html>
