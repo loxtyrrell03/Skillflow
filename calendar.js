@@ -123,8 +123,11 @@
         html += '<div class="cal-events">';
         const visibleEvents = events.slice(0, 2);
         visibleEvents.forEach(event => {
-          const time = event.time ? formatTime(event.time) + ' - ' : '';
-          html += `<div class="cal-event-label" data-event-id="${event.id}">${time}${event.title || 'Untitled'}</div>`;
+          const time = event.time ? formatTime(event.time) + ' ' : '';
+          const outline = getOutlineById(event.outlineId);
+          const duration = outline ? getTotalDuration(outline.sections) : 0;
+          const durationStr = duration > 0 ? `(${duration}m)` : '';
+          html += `<div class="cal-event-label" data-event-id="${event.id}">${time}${event.title || 'Untitled'} ${durationStr}</div>`;
         });
         if (events.length > 2) {
           html += `<div class="cal-event-count">+${events.length - 2}</div>`;
@@ -255,8 +258,53 @@
     list.innerHTML = html;
   }
 
+  // Render today's schedule on Session page
+  function renderSessionSchedule() {
+    const card = $('#sessionTodaySchedule');
+    const list = $('#sessionScheduleList');
+
+    if (!card || !list) return;
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+    const events = getEventsForDate(todayStr);
+
+    if (events.length === 0) {
+      card.style.display = 'none';
+      return;
+    }
+
+    card.style.display = 'block';
+
+    // Sort events by time
+    events.sort((a, b) => {
+      if (!a.time) return 1;
+      if (!b.time) return -1;
+      return a.time.localeCompare(b.time);
+    });
+
+    let html = '';
+    events.forEach(event => {
+      const outline = getOutlineById(event.outlineId);
+      const duration = outline ? getTotalDuration(outline.sections) : 0;
+
+      html += `<div class="schedule-item" data-event-id="${event.id}">`;
+      html += `<div class="schedule-time">${event.time ? formatTime(event.time) : 'All day'}</div>`;
+      html += '<div class="schedule-content">';
+      html += `<div class="schedule-title">${event.title || 'Untitled'}</div>`;
+      html += `<div class="schedule-meta">${duration} min`;
+      if (event.notes) html += ` • ${event.notes}`;
+      html += '</div></div>';
+      html += '<div class="schedule-actions">';
+      html += `<button class="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs" onclick="window.startEventSession('${event.id}')">Start</button>`;
+      html += '</div></div>';
+    });
+
+    list.innerHTML = html;
+  }
+
   // Open event modal
-  function openEventModal(eventId = null, date = null) {
+  function openEventModal(eventId = null, date = null, preselectedOutlineId = null) {
     const modal = $('#calendarEventModal');
     const select = $('#eventOutlineSelect');
     const dateInput = $('#eventDateInput');
@@ -296,12 +344,17 @@
     } else {
       // Create mode
       titleEl.textContent = 'Schedule Outline';
-      select.value = '';
+      // If preselectedOutlineId is provided, use it; otherwise empty
+      select.value = preselectedOutlineId || '';
       dateInput.value = date || '';
       timeInput.value = '';
       notesInput.value = '';
       deleteBtn.style.display = 'none';
-      preview.style.display = 'none';
+      if (preselectedOutlineId) {
+        updateEventPreview();
+      } else {
+        preview.style.display = 'none';
+      }
     }
 
     modal.classList.remove('hidden');
@@ -489,7 +542,10 @@
 
         html += `<div class="week-cell" data-date="${dateStr}" data-time="${timeStr}">`;
         events.forEach(event => {
-          html += `<div class="week-event" data-event-id="${event.id}" draggable="true">${event.title || 'Untitled'}</div>`;
+          const outline = getOutlineById(event.outlineId);
+          const duration = outline ? getTotalDuration(outline.sections) : 0;
+          const durationStr = duration > 0 ? ` (${duration}m)` : '';
+          html += `<div class="week-event" data-event-id="${event.id}" draggable="true">${event.title || 'Untitled'}${durationStr}</div>`;
         });
         html += '</div>';
       }
@@ -731,6 +787,7 @@
   window.startEventSession = startEventSession;
   window.updateEventPreview = updateEventPreview;
   window.renderOverviewSchedule = renderOverviewSchedule;
+  window.renderSessionSchedule = renderSessionSchedule;
 
   // Auto-init when DOM is ready
   if (document.readyState === 'loading') {

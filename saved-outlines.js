@@ -234,15 +234,9 @@ export function setupSavedOutlines({
       card.querySelector('[data-act="load"]')?.addEventListener('click', ()=>{ if(!requireAuth()) return; applyOutline && applyOutline(o); goHome(); });
       card.querySelector('[data-act="schedule"]')?.addEventListener('click', ()=>{
         if(!requireAuth()) return;
-        if(window.openEventModal && window.showTab) {
-          // Pre-select this outline in the modal
-          window.openEventModal(null, null);
-          // Wait a tick for modal to open, then set the outline
-          setTimeout(() => {
-            const select = document.getElementById('eventOutlineSelect');
-            if(select) select.value = o.id;
-            if(window.updateEventPreview) window.updateEventPreview();
-          }, 50);
+        if(window.openEventModal) {
+          // Open modal with this outline pre-selected
+          window.openEventModal(null, null, o.id);
         }
       });
       card.querySelector('[data-act="duplicate"]')?.addEventListener('click', async ()=>{

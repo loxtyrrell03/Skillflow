@@ -398,7 +398,14 @@ vertical-align: middle;
 
     </section>
 
-
+    <!-- Today's Schedule -->
+    <section id="sessionTodaySchedule" class="mb-4 card p-4" style="display:none">
+      <div class="flex items-center justify-between mb-2">
+        <h3 class="block-title">Today's Schedule</h3>
+        <a href="#calendar" class="text-xs text-[var(--accent)] hover:underline">View Calendar →</a>
+      </div>
+      <div id="sessionScheduleList" class="flex flex-col gap-2"></div>
+    </section>
 
     <!-- Controls -->
 
@@ -1611,7 +1618,7 @@ function showTab(id, skipHash){
 
   if(id==='overviewTab'){ if(window.renderOverviewSchedule) window.renderOverviewSchedule(); }
   if(id==='savedTab'){ renderSavedOutlines(); renderFoldersUI(); }
-  if(id==='homeTab') { renderHomeSavedBar(); }
+  if(id==='homeTab') { renderHomeSavedBar(); if(window.renderSessionSchedule) window.renderSessionSchedule(); }
   if(id==='calendarTab'){ if(window.renderCalendar) window.renderCalendar(); }
   if(id==='pricingTab'){
     // Ensure pricing content is mounted from pricing-tab.js
