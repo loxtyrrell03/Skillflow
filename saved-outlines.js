@@ -470,6 +470,15 @@ export function setupSavedOutlines({
             const list = (getSavedOutlines && getSavedOutlines()) || [];
             const me   = byId(list, o.id); if(!me) return;
             const s    = me.sections?.find(x=>x.id===sec.id); if(!s) return;
+
+            // Save current input values before re-render
+            const titleEl = secEl?.querySelector('[data-role="edit-title"]');
+            const minsEl = secEl?.querySelector('[data-role="edit-mins"]');
+            const descEl = secEl?.querySelector('[data-role="edit-desc"]');
+            if(titleEl) s.name = titleEl.value || s.name;
+            if(minsEl) s.minutes = Math.max(0.25, Number(minsEl.value || 0)) || s.minutes;
+            if(descEl) s.desc = descEl.value;
+
             s.links = s.links || [];
             if(payload?.type==='shelf'){
               const shelf = (getWidgetShelf && getWidgetShelf()) || [];
