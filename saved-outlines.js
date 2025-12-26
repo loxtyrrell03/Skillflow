@@ -317,6 +317,50 @@ export function setupSavedOutlines({
           document.querySelectorAll('[data-oid]').forEach(el=>{ el.style.outline=''; el.style.outlineOffset=''; });
         });
 
+        // Double-click to rename outline
+        titleEl.addEventListener('dblclick', (e)=>{
+          e.stopPropagation();
+          if(!requireAuth()) return;
+
+          const currentTitle = o.title || 'Untitled outline';
+          const input = document.createElement('input');
+          input.type = 'text';
+          input.className = 'input font-bold text-lg';
+          input.value = currentTitle;
+          input.style.width = '100%';
+
+          const originalHtml = titleEl.innerHTML;
+          titleEl.innerHTML = '';
+          titleEl.appendChild(input);
+          titleEl.setAttribute('draggable', 'false');
+          input.focus();
+          input.select();
+
+          const save = ()=>{
+            const newTitle = (input.value || '').trim() || 'Untitled outline';
+            const list = (getSavedOutlines && getSavedOutlines()) || [];
+            const me = byId(list, o.id);
+            if(me && me.title !== newTitle){
+              me.title = newTitle;
+              setSavedOutlines(list);
+              persist(o.id);
+            }
+            titleEl.innerHTML = escapeHtml(newTitle);
+            titleEl.setAttribute('draggable', 'true');
+          };
+
+          const cancel = ()=>{
+            titleEl.innerHTML = originalHtml;
+            titleEl.setAttribute('draggable', 'true');
+          };
+
+          input.addEventListener('blur', save);
+          input.addEventListener('keydown', (ev)=>{
+            if(ev.key === 'Enter'){ ev.preventDefault(); input.blur(); }
+            if(ev.key === 'Escape'){ ev.preventDefault(); input.removeEventListener('blur', save); cancel(); }
+          });
+        });
+
         // Permissive card merge target
         const onDragOverCard = (e)=>{
           const incoming = draggingOutlineId;
