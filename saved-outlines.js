@@ -279,7 +279,7 @@ export function setupSavedOutlines({
         persist(o.id);
         renderSavedOutlines();
 
-        // Focus the title input and save on Enter or blur
+        // Focus the title input and save on Enter/Escape
         try{
           const listRoot = card.closest('[data-oid]') || card;
           const secEl = listRoot?.querySelector(`li[data-sid="${escSel(newId)}"]`);
@@ -287,9 +287,10 @@ export function setupSavedOutlines({
           const saveBtn  = secEl?.querySelector('[data-act="save-section"]');
           if(titleInp){
             titleInp.focus(); titleInp.select();
-            const finish = (commit=true)=>{ if(commit && saveBtn){ saveBtn.click(); } };
-            titleInp.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); finish(true); } if(e.key==='Escape'){ e.preventDefault(); finish(true); } });
-            titleInp.addEventListener('blur', ()=> finish(true));
+            titleInp.addEventListener('keydown', (e)=>{
+              if(e.key==='Enter'){ e.preventDefault(); saveBtn?.click(); }
+              if(e.key==='Escape'){ e.preventDefault(); saveBtn?.click(); }
+            });
           }
         }catch{}
       });
