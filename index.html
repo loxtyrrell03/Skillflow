@@ -154,6 +154,8 @@ vertical-align: middle;
     <div class="tab-sep"></div>
     <a class="tab-link" data-tab="savedTab" href="#saved">Outlines</a>
     <div class="tab-sep"></div>
+    <a class="tab-link" data-tab="calendarTab" href="#calendar">Calendar</a>
+    <div class="tab-sep"></div>
     <a class="tab-link" data-tab="helpTab" href="#help">How to use</a>
     <div class="tab-sep"></div>
     <!-- NEW: visible Pricing button wired into showTab -->
@@ -346,6 +348,17 @@ vertical-align: middle;
 
         <p class="text-xs muted mt-3">This guidance reflects well‑established findings on specific goals, progress monitoring, and the goal‑gradient effect.</p>
 
+      </section>
+
+
+
+      <!-- Today's Schedule Widget -->
+      <section id="overviewTodaySchedule" class="feature card aurora-frame reveal p-4" style="display:none;">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="block-title">Today's Schedule</h3>
+          <button class="text-xs underline" onclick="window.showTab && window.showTab('calendarTab')">View Calendar →</button>
+        </div>
+        <div id="overviewScheduleList" class="space-y-2"></div>
       </section>
 
     </div>
@@ -711,6 +724,49 @@ vertical-align: middle;
     <div class="text-sm muted mb-3">Tip: drag one outline card onto another to propose a merge (only when NOT editing). Drag a card onto a folder (or breadcrumb) to move it.</div>
 
     <div id="savedList" class="grid lg:grid-cols-2 gap-4"></div>
+
+  </section>
+
+
+
+  <!-- ======= CALENDAR TAB ======= -->
+  <section id="calendarTab" class="hidden">
+
+    <!-- Calendar Controls -->
+    <div class="card p-4 mb-4">
+      <div class="flex items-center justify-between flex-wrap gap-3">
+        <div class="flex items-center gap-3">
+          <button id="calPrevMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">←</button>
+          <h2 id="calMonthYear" class="block-title text-lg">December 2025</h2>
+          <button id="calNextMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">→</button>
+          <button id="calToday" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">Today</button>
+        </div>
+        <div class="flex items-center gap-2">
+          <button id="calViewWeek" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Week</button>
+          <button id="calViewMonth" class="px-3 py-2 rounded-xl bg-[var(--accent)] text-white text-sm">Month</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Today's Schedule Summary -->
+    <div id="todayScheduleCard" class="card p-4 mb-4" style="display:none;">
+      <h3 class="block-title mb-3">Today's Schedule</h3>
+      <div id="todayScheduleList" class="space-y-2"></div>
+    </div>
+
+    <!-- Calendar Grid -->
+    <div class="card p-4">
+      <div id="calendarGrid" class="calendar-grid">
+        <!-- Calendar will be rendered here -->
+      </div>
+    </div>
+
+    <!-- Week View (hidden by default) -->
+    <div id="weekView" class="card p-4" style="display:none;">
+      <div id="weekGrid" class="week-grid">
+        <!-- Week view will be rendered here -->
+      </div>
+    </div>
 
   </section>
 
@@ -1153,6 +1209,69 @@ vertical-align: middle;
 
 
 
+<!-- ======= CALENDAR EVENT MODAL ======= -->
+<div id="calendarEventModal" class="modal hidden" aria-hidden="true">
+
+  <div class="modal-backdrop" data-close="1"></div>
+
+  <div class="modal-panel max-w-[600px]" role="dialog" aria-modal="true">
+
+    <div class="mb-4">
+      <div class="flex items-center justify-between">
+        <h3 id="eventModalTitle" class="text-xl font-semibold">Schedule Outline</h3>
+        <button class="btn-xxs" data-close="1">✕</button>
+      </div>
+    </div>
+
+    <div class="space-y-4">
+
+      <!-- Outline Selector -->
+      <div>
+        <label class="text-sm muted mb-1 block">Select Outline</label>
+        <select id="eventOutlineSelect" class="input w-full">
+          <option value="">Choose an outline...</option>
+        </select>
+      </div>
+
+      <!-- Date Input -->
+      <div>
+        <label class="text-sm muted mb-1 block">Date</label>
+        <input id="eventDateInput" type="date" class="input w-full"/>
+      </div>
+
+      <!-- Time Input -->
+      <div>
+        <label class="text-sm muted mb-1 block">Start Time (optional)</label>
+        <input id="eventTimeInput" type="time" class="input w-full"/>
+      </div>
+
+      <!-- Notes -->
+      <div>
+        <label class="text-sm muted mb-1 block">Notes (optional)</label>
+        <textarea id="eventNotesInput" class="input w-full" rows="3" placeholder="Add any notes for this session..."></textarea>
+      </div>
+
+      <!-- Event Preview (shows sections summary) -->
+      <div id="eventPreview" class="card p-3 bg-[var(--accent-100)] border-[var(--accent)]" style="display:none;">
+        <div class="text-sm muted mb-2">Session Preview:</div>
+        <div id="eventPreviewContent" class="text-sm"></div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex gap-2 justify-end">
+        <button id="eventDeleteBtn" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm" style="display:none;">Delete</button>
+        <button class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm" data-close="1">Cancel</button>
+        <button id="eventSaveBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm">Schedule</button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+
 <!-- ======= UI TOUR OVERLAY ======= -->
 
 <!-- Backdrop (below spotlight) -->
@@ -1300,6 +1419,8 @@ let savedFolders = loadJSON('outline_folders_v1') || []; // {id, name}
 let timerState = loadJSON('timer_state_v2') || { sessionStarted:false, running:false, currentIndex:0, secondsLeft:0, outlineId:null, lastSyncTs:0, awaitingNext:false };
 // AI generation preferences
 let aiPrefs = loadJSON('ai_prefs_v1') || { includeDescriptions:true, includeLinks:true, includeSubsections:true, maxLinksPerSection: 5, model:'gpt-5-mini' };
+// Calendar events: { id, outlineId, date (YYYY-MM-DD), time (HH:MM), notes, title (cached from outline) }
+let calendarEvents = loadJSON('calendar_events_v1') || [];
 // AI chat context (initial brief + subsequent revision turns)
 var __aiInitialBrief = '';
 var __aiChatHistory = [];
@@ -1385,7 +1506,7 @@ const saveCloudDebounced = debounce(async ()=>{
 
       currentSession, notes: sectionNotes, prefs, widgetShelf, savedOutlines, folders: savedFolders,
 
-      timer: timerState, updatedAt: serverTimestamp(), sessions: deleteField(), activePreset: deleteField()
+      calendarEvents, timer: timerState, updatedAt: serverTimestamp(), sessions: deleteField(), activePreset: deleteField()
 
     }, { merge:true });
 
@@ -1466,7 +1587,7 @@ window.aiGenerateSchedule = aiGenerateSchedule;
 
 /*************** Tabs (delegated) ***************/
 
-const __routeFor = { overviewTab:'overview', homeTab:'home', savedTab:'saved', helpTab:'help', pricingTab:'pricing' };
+const __routeFor = { overviewTab:'overview', homeTab:'home', savedTab:'saved', calendarTab:'calendar', helpTab:'help', pricingTab:'pricing' };
 const __tabFor = (route)=>{
   route = String(route||'').replace(/^#/,'').toLowerCase();
   for(const [tab, r] of Object.entries(__routeFor)){ if(r===route) return tab; }
@@ -1478,14 +1599,16 @@ function showTab(id, skipHash){
   const btn = document.querySelector(`.tab-link[data-tab="${id}"]`);
   if(btn) btn.classList.add('active');
 
-  const ids = ['overviewTab','homeTab','savedTab','helpTab','pricingTab'];
+  const ids = ['overviewTab','homeTab','savedTab','calendarTab','helpTab','pricingTab'];
   ids.forEach(secId=>{
     const el = document.getElementById(secId);
     if(el) el.classList.toggle('hidden', secId !== id);
   });
 
+  if(id==='overviewTab'){ if(window.renderOverviewSchedule) window.renderOverviewSchedule(); }
   if(id==='savedTab'){ renderSavedOutlines(); renderFoldersUI(); }
   if(id==='homeTab') { renderHomeSavedBar(); }
+  if(id==='calendarTab'){ if(window.renderCalendar) window.renderCalendar(); }
   if(id==='pricingTab'){
     // Ensure pricing content is mounted from pricing-tab.js
     try{
@@ -3575,6 +3698,8 @@ onAuthStateChanged(auth, async (user)=>{
 
         if(d.folders) savedFolders = d.folders;
 
+        if(d.calendarEvents) calendarEvents = d.calendarEvents;
+
         if(d.sectionDone && typeof d.sectionDone === 'object'){
 
           try{
@@ -5157,6 +5282,10 @@ renderFoldersUI();
 <!-- Pricing tab (kept; it can enhance #pricingTab if needed) -->
 
 <script src="./pricing-tab.js"></script>
+
+<!-- Calendar functionality -->
+
+<script src="./calendar.js"></script>
 
 </body>
 

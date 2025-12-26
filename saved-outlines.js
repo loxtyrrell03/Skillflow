@@ -122,6 +122,7 @@ export function setupSavedOutlines({
           <div class="flex-1 font-bold text-lg truncate" data-role="outline-title">${escapeHtml(o.title || 'Untitled outline')}</div>
           <button class="btn-xs" data-act="add-section">+ Section</button>
           <button class="btn-xs" data-act="load">Load</button>
+          <button class="btn-xs" data-act="schedule">📅 Schedule</button>
           <button class="btn-xs" data-act="duplicate">Duplicate</button>
           <button class="btn-xs" data-act="delete">Delete</button>
           <button class="btn-xxs" data-act="toggle-expand" aria-expanded="${isExpanded ? 'true':'false'}" title="${isExpanded?'Collapse':'Expand'}">${chevron}</button>
@@ -231,6 +232,19 @@ export function setupSavedOutlines({
 
       // Header actions
       card.querySelector('[data-act="load"]')?.addEventListener('click', ()=>{ if(!requireAuth()) return; applyOutline && applyOutline(o); goHome(); });
+      card.querySelector('[data-act="schedule"]')?.addEventListener('click', ()=>{
+        if(!requireAuth()) return;
+        if(window.openEventModal && window.showTab) {
+          // Pre-select this outline in the modal
+          window.openEventModal(null, null);
+          // Wait a tick for modal to open, then set the outline
+          setTimeout(() => {
+            const select = document.getElementById('eventOutlineSelect');
+            if(select) select.value = o.id;
+            if(window.updateEventPreview) window.updateEventPreview();
+          }, 50);
+        }
+      });
       card.querySelector('[data-act="duplicate"]')?.addEventListener('click', async ()=>{
         if(!requireAuth()) return;
         const list = (getSavedOutlines && getSavedOutlines()) || [];
