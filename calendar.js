@@ -29,9 +29,27 @@
     }
   }
 
+  // Get saved outlines from global state
+  function getSavedOutlines() {
+    // Try multiple possible locations where savedOutlines might be stored
+    if (window.savedOutlines && Array.isArray(window.savedOutlines)) {
+      return window.savedOutlines;
+    }
+    // Try loading from localStorage as fallback
+    try {
+      const stored = localStorage.getItem('saved_outlines_v1');
+      if (stored) {
+        return JSON.parse(stored);
+      }
+    } catch(e) {
+      console.error('Failed to load outlines:', e);
+    }
+    return [];
+  }
+
   // Get outline by ID
   function getOutlineById(id) {
-    const outlines = window.savedOutlines || [];
+    const outlines = getSavedOutlines();
     return outlines.find(o => o.id === id);
   }
 
@@ -136,6 +154,9 @@
 
     // Update today's schedule
     renderTodaySchedule();
+
+    // Setup drag and drop
+    setupDragAndDrop();
   }
 
   // Render today's schedule summary
@@ -251,12 +272,14 @@
     selectedEvent = eventId;
 
     // Populate outline selector
-    const outlines = window.savedOutlines || [];
+    const outlines = getSavedOutlines();
     let optionsHtml = '<option value="">Choose an outline...</option>';
     outlines.forEach(outline => {
       optionsHtml += `<option value="${outline.id}">${outline.title || 'Untitled'}</option>`;
     });
     select.innerHTML = optionsHtml;
+
+    console.log('Loaded outlines for calendar:', outlines.length);
 
     if (eventId) {
       // Edit mode
@@ -424,6 +447,69 @@
     }
   }
 
+  // Render week view
+  function renderWeekView() {
+    const grid = $('#weekGrid');
+    if (!grid) return;
+
+    // Get the week containing the first day of current month
+    const firstDay = new Date(currentYear, currentMonth, 1);
+    const weekStart = new Date(firstDay);
+    weekStart.setDate(firstDay.getDate() - firstDay.getDay()); // Start on Sunday
+
+    let html = '';
+
+    // Header row with days
+    html += '<div class="week-time-label"></div>'; // Empty corner
+    for (let i = 0; i < 7; i++) {
+      const day = new Date(weekStart);
+      day.setDate(weekStart.getDate() + i);
+      const isToday = day.toDateString() === new Date().toDateString();
+      html += `<div class="week-time-label" style="text-align:center;${isToday ? 'font-weight:800;color:var(--accent-600);' : ''}">
+        ${day.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
+      </div>`;
+    }
+
+    // Time slots (6 AM to 10 PM)
+    for (let hour = 6; hour <= 22; hour++) {
+      const timeLabel = `${hour % 12 || 12}:00 ${hour < 12 ? 'AM' : 'PM'}`;
+      html += `<div class="week-time-label">${timeLabel}</div>`;
+
+      for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+        const day = new Date(weekStart);
+        day.setDate(weekStart.getDate() + dayOffset);
+        const dateStr = `${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`;
+        const timeStr = `${String(hour).padStart(2, '0')}:00`;
+
+        const events = getEventsForDate(dateStr).filter(e => {
+          if (!e.time) return hour === 9; // All-day events show at 9 AM
+          const eventHour = parseInt(e.time.split(':')[0]);
+          return eventHour === hour;
+        });
+
+        html += `<div class="week-cell" data-date="${dateStr}" data-time="${timeStr}">`;
+        events.forEach(event => {
+          html += `<div class="week-event" data-event-id="${event.id}" draggable="true">${event.title || 'Untitled'}</div>`;
+        });
+        html += '</div>';
+      }
+    }
+
+    grid.innerHTML = html;
+
+    // Update month/year display
+    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                        'July', 'August', 'September', 'October', 'November', 'December'];
+    const monthYearEl = $('#calMonthYear');
+    if (monthYearEl) {
+      const endDay = new Date(weekStart);
+      endDay.setDate(weekStart.getDate() + 6);
+      monthYearEl.textContent = `Week of ${monthNames[weekStart.getMonth()]} ${weekStart.getDate()}, ${weekStart.getFullYear()}`;
+    }
+
+    setupDragAndDrop();
+  }
+
   // Navigate calendar
   function prevMonth() {
     currentMonth--;
@@ -450,19 +536,112 @@
     renderCalendar();
   }
 
+  // Drag and drop for events
+  let draggedEventId = null;
+
+  function setupDragAndDrop() {
+    // Event dragging
+    document.querySelectorAll('.cal-event-label, .week-event').forEach(el => {
+      el.setAttribute('draggable', 'true');
+
+      el.addEventListener('dragstart', (e) => {
+        draggedEventId = el.dataset.eventId;
+        e.dataTransfer.effectAllowed = 'move';
+        el.classList.add('dragging');
+        e.stopPropagation(); // Prevent parent handlers
+      });
+
+      el.addEventListener('dragend', (e) => {
+        el.classList.remove('dragging');
+        draggedEventId = null;
+      });
+
+      // Prevent click event immediately after drag
+      el.addEventListener('click', (e) => {
+        if (draggedEventId) {
+          e.stopPropagation();
+          e.preventDefault();
+        }
+      });
+    });
+
+    // Drop targets (calendar days and week cells)
+    document.querySelectorAll('.cal-day, .week-cell').forEach(cell => {
+      cell.addEventListener('dragover', (e) => {
+        if (!draggedEventId) return;
+        e.preventDefault();
+        e.dataTransfer.dropEffect = 'move';
+        cell.classList.add('drag-over');
+      });
+
+      cell.addEventListener('dragleave', (e) => {
+        cell.classList.remove('drag-over');
+      });
+
+      cell.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        cell.classList.remove('drag-over');
+
+        if (!draggedEventId) return;
+
+        const newDate = cell.dataset.date;
+        const newTime = cell.dataset.time;
+
+        if (!newDate) return;
+
+        // Update event
+        const events = getCalendarEvents();
+        const event = events.find(e => e.id === draggedEventId);
+        if (event) {
+          event.date = newDate;
+          if (newTime) {
+            event.time = newTime;
+          }
+          saveCalendarEvents(events);
+          renderCalendar();
+        }
+      });
+    });
+  }
+
   // Main render function
   function renderCalendar() {
+    const monthBtn = $('#calViewMonth');
+    const weekBtn = $('#calViewWeek');
+    const calGrid = $('#calendarGrid');
+    const weekViewEl = $('#weekView');
+
     if (viewMode === 'month') {
       renderMonthView();
-      $('#calendarGrid').parentElement.style.display = 'block';
-      $('#weekView').style.display = 'none';
-      $('#calViewMonth').classList.add('bg-[var(--accent)]', 'text-white');
-      $('#calViewMonth').classList.remove('border', 'border-[var(--border)]');
-      $('#calViewWeek').classList.remove('bg-[var(--accent)]', 'text-white');
-      $('#calViewWeek').classList.add('border', 'border-[var(--border)]');
+      if (calGrid && calGrid.parentElement) {
+        calGrid.parentElement.style.display = 'block';
+      }
+      if (weekViewEl) weekViewEl.style.display = 'none';
+
+      if (monthBtn) {
+        monthBtn.classList.add('bg-[var(--accent)]', 'text-white');
+        monthBtn.classList.remove('border', 'border-[var(--border)]');
+      }
+      if (weekBtn) {
+        weekBtn.classList.remove('bg-[var(--accent)]', 'text-white');
+        weekBtn.classList.add('border', 'border-[var(--border)]');
+      }
     } else {
-      // Week view would go here (simplified for now)
-      renderMonthView();
+      renderWeekView();
+      if (calGrid && calGrid.parentElement) {
+        calGrid.parentElement.style.display = 'none';
+      }
+      if (weekViewEl) weekViewEl.style.display = 'block';
+
+      if (weekBtn) {
+        weekBtn.classList.add('bg-[var(--accent)]', 'text-white');
+        weekBtn.classList.remove('border', 'border-[var(--border)]');
+      }
+      if (monthBtn) {
+        monthBtn.classList.remove('bg-[var(--accent)]', 'text-white');
+        monthBtn.classList.add('border', 'border-[var(--border)]');
+      }
     }
   }
 
