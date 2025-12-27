@@ -739,40 +739,77 @@ vertical-align: middle;
   <!-- ======= CALENDAR TAB ======= -->
   <section id="calendarTab" class="hidden">
 
-    <!-- Calendar Controls -->
-    <div class="card p-4 mb-4">
-      <div class="flex items-center justify-between flex-wrap gap-3">
-        <div class="flex items-center gap-3">
-          <button id="calPrevMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">←</button>
-          <h2 id="calMonthYear" class="block-title text-lg">December 2025</h2>
-          <button id="calNextMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">→</button>
-          <button id="calToday" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">Today</button>
+    <div class="calendar-layout">
+
+      <!-- Calendar Sidebar -->
+      <aside id="calendarSidebar" class="calendar-sidebar">
+
+        <!-- Mini Calendar (optional) -->
+        <div class="card p-3 mb-3">
+          <div id="miniCalendar" class="mini-calendar">
+            <!-- Mini calendar rendered by JS -->
+          </div>
         </div>
-        <div class="flex items-center gap-2">
-          <button id="calViewWeek" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Week</button>
-          <button id="calViewMonth" class="px-3 py-2 rounded-xl bg-[var(--accent)] text-white text-sm">Month</button>
+
+        <!-- Calendars/Categories List -->
+        <div class="card p-3">
+          <div class="flex items-center justify-between mb-3">
+            <h4 class="font-semibold text-sm">My Calendars</h4>
+            <button id="addCalendarBtn" class="btn-xxs" title="Add Calendar">+</button>
+          </div>
+          <div id="calendarList" class="calendar-list space-y-1">
+            <!-- Calendar items rendered by JS -->
+          </div>
         </div>
-      </div>
-    </div>
 
-    <!-- Today's Schedule Summary -->
-    <div id="todayScheduleCard" class="card p-4 mb-4" style="display:none;">
-      <h3 class="block-title mb-3">Today's Schedule</h3>
-      <div id="todayScheduleList" class="space-y-2"></div>
-    </div>
+      </aside>
 
-    <!-- Calendar Grid -->
-    <div class="card p-4">
-      <div id="calendarGrid" class="calendar-grid">
-        <!-- Calendar will be rendered here -->
-      </div>
-    </div>
+      <!-- Main Calendar Area -->
+      <div class="calendar-main">
 
-    <!-- Week View (hidden by default) -->
-    <div id="weekView" class="card p-4" style="display:none;">
-      <div id="weekGrid" class="week-grid">
-        <!-- Week view will be rendered here -->
+        <!-- Calendar Controls -->
+        <div class="card p-4 mb-4">
+          <div class="flex items-center justify-between flex-wrap gap-3">
+            <div class="flex items-center gap-3">
+              <button id="calPrevMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">←</button>
+              <h2 id="calMonthYear" class="block-title text-lg">December 2025</h2>
+              <button id="calNextMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">→</button>
+              <button id="calToday" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">Today</button>
+            </div>
+            <div class="flex items-center gap-2">
+              <button id="calViewWeek" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Week</button>
+              <button id="calViewMonth" class="px-3 py-2 rounded-xl bg-[var(--accent)] text-white text-sm">Month</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Schedule Summary -->
+        <div id="todayScheduleCard" class="card p-4 mb-4" style="display:none;">
+          <h3 class="block-title mb-3">Today's Schedule</h3>
+          <div id="todayScheduleList" class="space-y-2"></div>
+        </div>
+
+        <!-- Calendar Grid -->
+        <div class="card p-4">
+          <div id="calendarGrid" class="calendar-grid">
+            <!-- Calendar will be rendered here -->
+          </div>
+        </div>
+
+        <!-- Week View (hidden by default) -->
+        <div id="weekView" class="card p-4" style="display:none;">
+          <!-- All-day events banner row -->
+          <div id="weekAllDayRow" class="week-allday-row" style="display:none;">
+            <div class="week-allday-label">All Day</div>
+            <div id="weekAllDayEvents" class="week-allday-events"></div>
+          </div>
+          <div id="weekGrid" class="week-grid">
+            <!-- Week view will be rendered here -->
+          </div>
+        </div>
+
       </div>
+
     </div>
 
   </section>
@@ -1240,22 +1277,89 @@ vertical-align: middle;
         </select>
       </div>
 
-      <!-- Date Input -->
-      <div>
-        <label class="text-sm muted mb-1 block">Date</label>
-        <input id="eventDateInput" type="date" class="input w-full"/>
+      <!-- All-Day Checkbox -->
+      <div class="flex items-center gap-2">
+        <input id="eventAllDayInput" type="checkbox" class="w-4 h-4 accent-[var(--accent)]"/>
+        <label for="eventAllDayInput" class="text-sm">All-day event</label>
       </div>
 
-      <!-- Time Input -->
+      <!-- Date Inputs -->
+      <div class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm muted mb-1 block">Start Date</label>
+          <input id="eventDateInput" type="date" class="input w-full"/>
+        </div>
+        <div id="eventEndDateWrap">
+          <label class="text-sm muted mb-1 block">End Date (optional)</label>
+          <input id="eventEndDateInput" type="date" class="input w-full"/>
+        </div>
+      </div>
+
+      <!-- Time Inputs (hidden when all-day) -->
+      <div id="eventTimeRow" class="grid grid-cols-2 gap-3">
+        <div>
+          <label class="text-sm muted mb-1 block">Start Time</label>
+          <input id="eventTimeInput" type="time" class="input w-full"/>
+        </div>
+        <div>
+          <label class="text-sm muted mb-1 block">End Time (optional)</label>
+          <input id="eventEndTimeInput" type="time" class="input w-full"/>
+        </div>
+      </div>
+
+      <!-- Recurrence -->
       <div>
-        <label class="text-sm muted mb-1 block">Start Time (optional)</label>
-        <input id="eventTimeInput" type="time" class="input w-full"/>
+        <label class="text-sm muted mb-1 block">Repeat</label>
+        <select id="eventRecurrenceInput" class="input w-full">
+          <option value="">Does not repeat</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+          <option value="yearly">Yearly</option>
+          <option value="custom">Custom...</option>
+        </select>
+      </div>
+
+      <!-- Custom Recurrence Options (hidden by default) -->
+      <div id="eventCustomRecurrence" class="space-y-2 p-3 border border-[var(--border)] rounded-lg" style="display:none;">
+        <div class="flex items-center gap-2">
+          <span class="text-sm">Repeat every</span>
+          <input id="eventRecurrenceInterval" type="number" min="1" value="1" class="input w-16 text-center"/>
+          <select id="eventRecurrenceUnit" class="input">
+            <option value="days">days</option>
+            <option value="weeks">weeks</option>
+            <option value="months">months</option>
+            <option value="years">years</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-sm muted mb-1 block">End repeat</label>
+          <select id="eventRecurrenceEnd" class="input w-full">
+            <option value="never">Never</option>
+            <option value="date">On date</option>
+            <option value="count">After occurrences</option>
+          </select>
+        </div>
+        <div id="eventRecurrenceEndDateWrap" style="display:none;">
+          <input id="eventRecurrenceEndDate" type="date" class="input w-full"/>
+        </div>
+        <div id="eventRecurrenceCountWrap" style="display:none;">
+          <input id="eventRecurrenceCount" type="number" min="1" value="10" class="input w-full" placeholder="Number of occurrences"/>
+        </div>
+      </div>
+
+      <!-- Calendar Category -->
+      <div>
+        <label class="text-sm muted mb-1 block">Calendar</label>
+        <select id="eventCalendarSelect" class="input w-full">
+          <!-- Calendars will be populated dynamically -->
+        </select>
       </div>
 
       <!-- Notes -->
       <div>
         <label class="text-sm muted mb-1 block">Notes (optional)</label>
-        <textarea id="eventNotesInput" class="input w-full" rows="3" placeholder="Add any notes for this session..."></textarea>
+        <textarea id="eventNotesInput" class="input w-full" rows="2" placeholder="Add any notes for this session..."></textarea>
       </div>
 
       <!-- Event Preview (shows sections summary) -->
