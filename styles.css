@@ -359,19 +359,10 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 
 /* Remove ghost copy while dragging (keep element in flow) */
 .drag-ghost{opacity:.35}
-/* Collapse the source row while dragging so only the placeholder remains in-list */
+/* Hide the source row visually while dragging without collapsing layout */
 .outline-row.dragging,
 .section-preview.dragging{
   opacity:0;
-  margin-bottom:0;
-  padding-top:0;
-  padding-bottom:0;
-  border-width:0;
-  max-height:0;
-  min-height:0;
-  overflow:hidden;
-  box-shadow:none;
-  pointer-events:none;
 }
 
 /* Do not create a visible gap for the placeholder while dragging */
