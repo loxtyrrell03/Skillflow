@@ -60,6 +60,8 @@ export function setupSavedOutlines({
   const byId  = (arr, id)=> (arr || []).find(x => x.id === id);
   const keyOf = (oId, sId)=> `${oId}|${sId}`;
   const fmtMins = (n)=> String(Number(n || 0)).replace(/\.0+$/,'');
+  const sumMinutes = (sections=[])=> sections.reduce((sum, s)=> sum + Number(s?.minutes || 0), 0);
+  const pluralize = (count, singular, plural)=> `${count} ${count===1 ? singular : (plural || `${singular}s`)}`;
   const escSel = (s)=> (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/([ #;?%&,.+*~':"!^$[\]()=>|/@])/g, '\\$1');
   const debounce = (fn,ms=400)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} };
 
@@ -218,13 +220,199 @@ export function setupSavedOutlines({
       </div>`;
   }
 
+  function modernOutlineSummaryHtml(sections, isExpanded){
+    const preview = (sections || []).slice(0, 3).map(s=>`
+      <span class="saved-preview-chip">
+        <span class="truncate">${escapeHtml(s.name || 'Untitled section')}</span>
+        <span class="saved-preview-time">${fmtMins(s.minutes)}m</span>
+      </span>`).join('');
+    const overflow = Math.max(0, (sections || []).length - 3);
+    return `
+      <div class="saved-outline-meta">
+        <span class="saved-meta-pill">${pluralize((sections || []).length, 'section')}</span>
+        <span class="saved-meta-pill">${fmtMins(sumMinutes(sections || []))} min total</span>
+        ${isExpanded ? '<span class="saved-meta-pill saved-meta-pill-accent">Editor open</span>' : ''}
+      </div>
+      <div class="saved-outline-preview-list">
+        ${preview || '<span class="saved-preview-empty">No sections yet. Open the outline to add one.</span>'}
+        ${overflow ? `<span class="saved-preview-more">+${overflow} more</span>` : ''}
+      </div>`;
+  }
+
+  function modernOutlineCardHtml(o, isExpanded){
+    const toggleLabel = isExpanded ? 'Close editor' : 'Edit outline';
+    return `
+      <div class="card saved-outline-card ${isExpanded ? 'is-expanded' : ''}" data-oid="${escapeHtml(o.id)}" draggable="false">
+        <div class="saved-outline-head" data-role="outline-head">
+          <div class="saved-outline-main">
+            <div class="saved-outline-title" data-role="outline-title">${escapeHtml(o.title || 'Untitled outline')}</div>
+            ${modernOutlineSummaryHtml(o.sections || [], isExpanded)}
+          </div>
+
+          <div class="saved-outline-actions">
+            <div class="saved-outline-actions-group">
+              <button class="btn-xs saved-action saved-action-primary" data-act="toggle-expand" aria-expanded="${isExpanded ? 'true':'false'}" title="${toggleLabel}">${toggleLabel}</button>
+              <button class="btn-xs saved-action" data-act="load">Load</button>
+              <button class="btn-xs saved-action" data-act="schedule">Schedule</button>
+            </div>
+
+            <div class="saved-outline-actions-group saved-outline-actions-secondary">
+              <button class="btn-xs saved-action saved-action-subtle" data-act="duplicate">Copy</button>
+              <button class="btn-xs saved-action saved-action-subtle danger" data-act="delete">Delete</button>
+            </div>
+          </div>
+        </div>
+        ${isExpanded ? `
+          <div class="saved-outline-body">
+            <div class="saved-outline-body-header">
+              <div>
+                <div class="saved-outline-body-kicker">Sections</div>
+                <div class="saved-outline-body-text">Open a section to edit details, timing, and links. Drag rows to reorder them.</div>
+              </div>
+              <button class="btn-xs saved-action saved-action-inline" data-act="add-section">+ New section</button>
+            </div>
+            <ul class="saved-section-list" data-role="sections">
+              ${(o.sections||[]).map(s=>{
+                const k = keyOf(o.id, s.id);
+                return editingSections.has(k)
+                  ? `<li class="outline-row editing" data-sid="${escapeHtml(s.id)}" data-view="edit">${modernSectionEditCardInnerHtml(s)}</li>`
+                  : modernSectionPreviewRowHtml(s);
+              }).join('')}
+            </ul>
+          </div>` : ''}
+      </div>`;
+  }
+
+  function modernSectionPreviewRowHtml(s){
+    return `
+      <li class="outline-row section-row saved-section-row" data-sid="${escapeHtml(s.id)}" data-view="preview" draggable="true">
+        <div class="saved-section-card">
+          <div class="saved-section-copy">
+            <div class="title truncate saved-section-name">${escapeHtml(s.name || 'Untitled section')}</div>
+            <div class="saved-section-subtle">Click to edit section details and links.</div>
+          </div>
+          <div class="saved-section-actions">
+            <span class="mins saved-section-mins">${fmtMins(s.minutes)} min</span>
+            <button class="btn-xxs saved-icon-btn" data-act="del-sec" title="Delete section">Delete</button>
+          </div>
+        </div>
+      </li>`;
+  }
+
+  function modernLinksBarInnerHtml(links){
+    if(!(links||[]).length){
+      return `<div class="saved-empty-links">Drop links here from the shelf below.</div>`;
+    }
+    return (links||[]).map((w,i)=> {
+      const iconHtml = (w.icon==='img' && w.img)
+        ? `<img src="${escapeHtml(w.img)}" alt="" class="rounded-[4px] object-cover" draggable="false" style="width:18px;height:18px;"/>`
+        : `<span class="link-icon">${escapeHtml(w.emoji||'ðŸ”—')}</span>`;
+      return `
+        <div class="widget saved-link-item" data-link-idx="${i}">
+          <div class="link-card section-link" draggable="true" data-idx="${i}">
+            ${iconHtml}
+            <div class="saved-link-copy">
+              <span class="truncate">${escapeHtml(w.label || 'Untitled')}</span>
+              <span class="saved-link-url truncate">${escapeHtml(w.url || '')}</span>
+            </div>
+          </div>
+          <button class="bin saved-inline-delete" data-act="del-link" title="Delete">Remove</button>
+        </div>`;
+    }).join('');
+  }
+
+  function modernInlineShelfHtml(shelf){
+    const items = (shelf||[]).map(w=>{
+      const iconHtml = (w.icon==='img' && w.img)
+        ? `<img src="${escapeHtml(w.img)}" alt="" class="rounded-[4px] object-cover" draggable="false" style="width:18px;height:18px;"/>`
+        : `<span class="link-icon">${escapeHtml(w.emoji || 'ðŸ”—')}</span>`;
+      return `
+        <div class="widget saved-shelf-item" data-wid="${escapeHtml(w.id)}">
+          <div class="link-card draggable-shelf saved-shelf-card" draggable="true" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}">
+            ${iconHtml}
+            <div class="saved-shelf-copy">
+              <div class="truncate saved-shelf-title">${escapeHtml(w.label || 'Untitled')}</div>
+              <div class="text-xs muted truncate">${escapeHtml(w.url || '')}</div>
+            </div>
+          </div>
+          <button class="bin saved-inline-delete" data-act="del-shelf" title="Delete from shelf">Remove</button>
+        </div>`;
+    }).join('');
+    return `
+      <div class="section-edit-panel" data-role="inline-shelf">
+        <div class="section-panel-head">
+          <div>
+            <div class="section-panel-title">Widget shelf</div>
+            <div class="section-panel-copy">Drag reusable resources into the section links area, or click one to edit.</div>
+          </div>
+          <div class="saved-panel-actions">
+            <button class="btn-xs saved-action saved-action-inline" data-act="add-shelf" type="button">+ New widget</button>
+            <button class="btn-xs saved-action saved-action-subtle" data-act="reset-shelf" type="button">Reset</button>
+          </div>
+        </div>
+        <div class="editor-shelf" data-role="shelf-row">${items || '<div class="saved-empty-links">No widgets yet. Add one to reuse it across sections.</div>'}</div>
+      </div>`;
+  }
+
+  function modernSectionEditCardInnerHtml(s){
+    const desc = escapeHtml(s.desc || '');
+    return `
+      <div class="section-edit compact-edit" data-sid="${escapeHtml(s.id)}" data-view="edit">
+        <div class="section-edit-header">
+          <div>
+            <div class="section-edit-kicker">Editing section</div>
+            <div class="section-edit-subtitle">Keep the structure simple, then attach only the links you need.</div>
+          </div>
+        </div>
+        <div class="row head">
+          <label class="section-field">
+            <span class="field-label">Title</span>
+            <input class="input title-input flex-1" data-role="edit-title" value="${escapeHtml(s.name || '')}" placeholder="Section title"/>
+          </label>
+          <label class="section-field section-field-mins">
+            <span class="field-label">Minutes</span>
+            <input class="input mins-input" type="number" min="0.25" step="0.25" data-role="edit-mins" value="${escapeHtml(String(s.minutes || 0))}"/>
+          </label>
+        </div>
+        <label class="row section-field">
+          <span class="field-label">Description</span>
+          <textarea class="input w-full" data-role="edit-desc" placeholder="What should this section focus on?">${desc}</textarea>
+        </label>
+        <div class="section-edit-panels">
+          ${modernInlineShelfHtml((getWidgetShelf && getWidgetShelf()) || [])}
+          <div class="section-edit-panel">
+            <div class="section-panel-head">
+              <div>
+                <div class="section-panel-title">Links</div>
+                <div class="section-panel-copy">Drop widgets here to attach them to this section.</div>
+              </div>
+            </div>
+            <div class="section-links-bar" data-role="links-bar">${modernLinksBarInnerHtml(s.links)}</div>
+          </div>
+        </div>
+        <div class="section-edit-footer">
+          <div class="section-edit-note">Tip: drag rows or links to reorganise them.</div>
+          <button class="saved-save-btn" data-act="save-section">Save section</button>
+        </div>
+      </div>`;
+  }
+
   function renderSavedOutlines(){
     if(!savedListEl) return;
     const outlines = (getSavedOutlines && getSavedOutlines()) || [];
     const currentFolderId = (window.__getCurrentFolderId ? window.__getCurrentFolderId() : null);
 
     const visible = outlines.filter(o=> (currentFolderId ? o.folderId === currentFolderId : !o.folderId));
-    savedListEl.innerHTML = visible.map(o => outlineCardHtml(o, expandedOutlines.has(o.id))).join('');
+    if(!visible.length){
+      savedListEl.innerHTML = `
+        <div class="card saved-empty-state">
+          <div class="saved-empty-kicker">No outlines here yet</div>
+          <h3 class="saved-empty-title">${currentFolderId ? 'This folder is empty.' : 'Create your first outline.'}</h3>
+          <p class="saved-empty-text">${currentFolderId ? 'Move an outline into this folder or create a new one from the header above.' : 'Start with a blank outline, then add sections as your routine takes shape.'}</p>
+        </div>`;
+      return;
+    }
+    savedListEl.innerHTML = visible.map(o => modernOutlineCardHtml(o, expandedOutlines.has(o.id))).join('');
 
     visible.forEach(o=>{
       const card = savedListEl.querySelector(`[data-oid="${escSel(o.id)}"]`);
@@ -281,7 +469,7 @@ export function setupSavedOutlines({
 
         // Focus the title input and save on Enter/Escape
         try{
-          const listRoot = card.closest('[data-oid]') || card;
+          const listRoot = savedListEl.querySelector(`[data-oid="${escSel(o.id)}"]`);
           const secEl = listRoot?.querySelector(`li[data-sid="${escSel(newId)}"]`);
           const titleInp = secEl?.querySelector('[data-role="edit-title"]');
           const saveBtn  = secEl?.querySelector('[data-act="save-section"]');
@@ -464,7 +652,7 @@ export function setupSavedOutlines({
         const li = sectionsList.querySelector(`li.editing[data-sid="${escSel(sec.id)}"]`); if(!li) return;
 
         const secEl = li.querySelector('.section-edit');
-        const linksBar = secEl?.querySelector('[data-role="links-bar"]'); if (linksBar) linksBar.innerHTML = linksBarInnerHtml(sec.links || []);
+        const linksBar = secEl?.querySelector('[data-role="links-bar"]'); if (linksBar) linksBar.innerHTML = modernLinksBarInnerHtml(sec.links || []);
         const showShelf = !(window.prefs && window.prefs.showWidgetShelf===false);
         if(!showShelf){
           const shelfWrap = secEl?.querySelector('[data-role="inline-shelf"]'); if(shelfWrap) shelfWrap.remove();

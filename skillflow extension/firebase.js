@@ -1,5 +1,9 @@
 import { initializeApp } from "./vendor/firebase-app.js";
-import { getAuth, setPersistence, browserLocalPersistence } from "./vendor/firebase-auth.js";
+import {
+  browserLocalPersistence,
+  indexedDBLocalPersistence,
+  initializeAuth
+} from "./vendor/firebase-auth.js";
 import { getFirestore } from "./vendor/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -13,8 +17,9 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
-const auth = getAuth(app);
-setPersistence(auth, browserLocalPersistence).catch(() => {});
+const auth = initializeAuth(app, {
+  persistence: [indexedDBLocalPersistence, browserLocalPersistence]
+});
 const db = getFirestore(app);
 
 export { app, auth, db };

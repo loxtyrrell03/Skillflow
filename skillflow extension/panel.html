@@ -16,27 +16,18 @@
         <div class="brand-sub">Focus side panel</div>
       </div>
     </div>
+    <div class="topbar-actions">
+      <div class="account-inline">
+        <span id="accountState" class="chip account-chip">Local mode</span>
+        <span id="accountHint" class="account-inline-hint muted">Sign in to sync</span>
+      </div>
+      <button id="openLoginBtn" class="btn small" type="button">Sign in</button>
+      <button id="signOutBtn" class="btn small ghost hidden" type="button">Sign out</button>
+    </div>
   </header>
 
   <main class="panel-body">
     <div id="status" class="status muted hidden"></div>
-
-    <section class="card account-card">
-      <div class="card-header">
-        <div>
-          <div class="block-sub">Account</div>
-          <div class="block-title">Sync status</div>
-        </div>
-      </div>
-      <div class="account-body">
-        <div id="accountState" class="muted">Not signed in</div>
-        <div class="account-actions">
-          <button id="openLoginBtn" class="btn small" type="button">Sign in</button>
-          <button id="signOutBtn" class="btn small danger hidden" type="button">Sign out</button>
-        </div>
-      </div>
-      <div id="accountHint" class="account-hint muted">Sign in to sync sessions from Skillflow.</div>
-    </section>
 
     <section class="card timer-card">
       <div class="card-header">
@@ -50,10 +41,11 @@
         <div id="timerClock" class="timer-clock">00:00</div>
         <div id="timerMeta" class="timer-meta muted">Select a session</div>
       </div>
-      <div class="progress-host">
+      <div id="progressHost" class="progress-host" tabindex="0" role="slider" aria-label="Session progress">
         <div id="progressFill" class="progress-fill"></div>
         <div id="progressSegments" class="progress-segments"></div>
       </div>
+      <div id="progressCaption" class="progress-caption muted">Click the bar to jump within the session.</div>
       <div class="timer-controls">
         <button id="prevBtn" class="btn small" type="button">Prev</button>
         <button id="startBtn" class="btn primary" type="button">Start</button>

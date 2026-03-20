@@ -13,7 +13,8 @@
 
 <script src="https://cdn.tailwindcss.com"></script>
 
-<link rel="stylesheet" href="./styles.css"/>
+<link rel="stylesheet" href="./styles.css?v=20260320b"/>
+<link rel="icon" href="./logo2.png" type="image/png"/>
 
 <style id="index-overrides">
 
@@ -420,6 +421,7 @@ vertical-align: middle;
       <button id="nextBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Next ▶</button>
 
       <button id="focusModeBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Focus Mode</button>
+      <button id="popoutProgressBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Pop out</button>
       <!-- MOVED: clock now lives next to Focus Mode -->
 
       <div id="clock" class="clock-badge text-2xl tabular-nums">00:00</div>
@@ -636,101 +638,78 @@ vertical-align: middle;
 
   <!-- ======= SAVED OUTLINES ======= -->
 
-  <section id="savedTab" class="hidden">
+  <section id="savedTab" class="hidden saved-workspace">
 
-    <!-- Optional merge bar (kept) -->
-
-    <div id="mergeBar" class="card p-4 mb-4" style="display:none">
-
-      <div class="flex flex-col gap-2">
-
-        <div class="text-sm">Merge <strong id="mergeSourceName"></strong> ➕ <strong id="mergeTargetName"></strong></div>
-
-        <div class="flex flex-wrap items-center gap-2">
-
-          <label class="text-sm muted">New outline name</label>
-
-          <input id="mergeTitleInput" class="input flex-1" placeholder="e.g. ‘Balanced + Openings’"/>
-
-          <button id="mergeConfirmBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm">Merge</button>
-
-          <button id="mergeCancelBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Cancel</button>
-
-        </div>
-
-        <div class="text-xs muted">Original outlines are kept. Sections from the dragged outline are appended after the target’s sections.</div>
-
+    <div class="card saved-toolbar">
+      <div class="saved-toolbar-copy">
+        <div class="saved-toolbar-kicker">Saved outlines</div>
+        <h2 class="saved-toolbar-title">Reusable practice plans, without the clutter.</h2>
+        <p class="saved-toolbar-text">Scan your outlines quickly, then open one to edit sections, notes, timing, and links in a calmer workspace.</p>
       </div>
 
-    </div>
-
-
-
-    <!-- Create outline (reworked as a small popover next to the button) -->
-
-    <div class="mb-3 flex items-center gap-2">
-      <div id="createOutlineWrap" class="pop-wrap">
-        <button id="createOutlineBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">+ Create new outline</button>
-        <div id="createOutlineForm" class="popover card mb-0 hidden">
-          <label class="text-sm">Outline title</label>
-          <div class="mt-2 flex items-center gap-2">
-            <input id="newOutlineTitle" class="input flex-1" placeholder="e.g., 90‑min Balanced Plan"/>
-            <button id="createOutlineConfirm" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm">Create</button>
-            <button id="createOutlineCancel" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Cancel</button>
+      <div class="saved-toolbar-actions">
+        <div id="createOutlineWrap" class="pop-wrap">
+          <button id="createOutlineBtn" class="saved-toolbar-btn saved-toolbar-btn-primary">+ Create outline</button>
+          <div id="createOutlineForm" class="popover card mb-0 hidden saved-inline-form">
+            <label class="text-sm saved-inline-label">Outline title</label>
+            <div class="mt-2 flex items-center gap-2 saved-inline-row">
+              <input id="newOutlineTitle" class="input flex-1" placeholder="e.g., 90-min balanced plan"/>
+              <button id="createOutlineConfirm" class="saved-toolbar-btn saved-toolbar-btn-confirm">Create</button>
+              <button id="createOutlineCancel" class="saved-toolbar-btn saved-toolbar-btn-secondary">Cancel</button>
+            </div>
           </div>
         </div>
+
+        <button id="aiScheduleBtn" class="saved-toolbar-btn saved-toolbar-btn-gradient">AI scheduling</button>
+        <button id="aiOptionsBtn" class="saved-toolbar-btn saved-toolbar-btn-secondary">AI options</button>
       </div>
-      <!-- AI Scheduling button + options -->
-      <button id="aiScheduleBtn" class="px-3 py-2 rounded-xl text-sm text-white shadow-sm bg-gradient-to-r from-fuchsia-600 via-sky-500 to-emerald-500 hover:brightness-110">🪄 AI Scheduling</button>
-      <button id="aiOptionsBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">AI Options</button>
     </div>
 
+    <div id="mergeBar" class="card saved-merge-banner" style="display:none">
+      <div class="saved-merge-copy">
+        <div class="saved-toolbar-kicker">Merge outlines</div>
+        <div class="saved-merge-title">Combine <strong id="mergeSourceName"></strong> into <strong id="mergeTargetName"></strong></div>
+        <div class="text-xs muted">The originals stay untouched. A new outline will be created with the combined section list.</div>
+      </div>
 
-    <!-- Folders area -->
+      <div class="saved-merge-form">
+        <label class="text-sm muted" for="mergeTitleInput">New outline name</label>
+        <div class="saved-inline-row">
+          <input id="mergeTitleInput" class="input flex-1" placeholder="e.g. Balanced + Openings"/>
+          <button id="mergeConfirmBtn" class="saved-toolbar-btn saved-toolbar-btn-confirm">Merge</button>
+          <button id="mergeCancelBtn" class="saved-toolbar-btn saved-toolbar-btn-secondary">Cancel</button>
+        </div>
+      </div>
+    </div>
 
-    <div id="foldersWrap" class="card p-4 mb-4">
-
-      <div class="flex items-center justify-between">
-
-        <div id="folderCrumbs" class="breadcrumbs"></div>
+    <div id="foldersWrap" class="card saved-folders-panel">
+      <div class="saved-folders-head">
+        <div class="saved-folders-copy">
+          <div class="saved-toolbar-kicker">Folders</div>
+          <h3 class="saved-folders-title">Group related outlines</h3>
+          <p class="saved-folders-text">Keep variations together and drag outlines between folders when your library grows.</p>
+          <div id="folderCrumbs" class="breadcrumbs"></div>
+        </div>
 
         <div id="createFolderWrap" class="flex items-center gap-2 pop-wrap">
+          <button id="createFolderBtn" class="saved-toolbar-btn saved-toolbar-btn-secondary">+ New folder</button>
 
-          <button id="createFolderBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">+ New folder</button>
-
-          <div id="createFolderForm" class="popover hidden">
-
-            <div class="flex items-center gap-2">
-
+          <div id="createFolderForm" class="popover hidden saved-inline-form">
+            <div class="saved-inline-row">
               <input id="newFolderName" class="input flex-1" placeholder="Folder name"/>
-
-              <button id="createFolderConfirm" class="btn-xs">Create</button>
-
-              <button id="createFolderCancel" class="btn-xs">Cancel</button>
-
+              <button id="createFolderConfirm" class="saved-toolbar-btn saved-toolbar-btn-confirm">Create</button>
+              <button id="createFolderCancel" class="saved-toolbar-btn saved-toolbar-btn-secondary">Cancel</button>
             </div>
-
           </div>
-
         </div>
-
       </div>
 
-
-
-      <div id="folderGrid" class="folder-grid mt-3"></div>
-
+      <div id="folderGrid" class="folder-grid"></div>
     </div>
 
+    <div class="saved-page-note">Drag one outline onto another to merge it. Drag an outline onto a folder to move it.</div>
 
-
-    <hr class="sep-line"/>
-
-
-
-    <div class="text-sm muted mb-3">Tip: drag one outline card onto another to propose a merge (only when NOT editing). Drag a card onto a folder (or breadcrumb) to move it.</div>
-
-    <div id="savedList" class="grid lg:grid-cols-2 gap-4"></div>
+    <div id="savedList" class="saved-outline-list"></div>
 
   </section>
 
@@ -1451,7 +1430,7 @@ import { getFirestore, doc, getDoc, setDoc, serverTimestamp, deleteField } from 
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js";
 
 
-import { setupSavedOutlines } from "./saved-outlines.js";
+import { setupSavedOutlines } from "./saved-outlines.js?v=20260320b";
 
 
 
@@ -1929,6 +1908,7 @@ window.requireAuth = ()=>{ if(!currentUser){ try{ showModal(authModal); }catch{}
 
 const startBtn = $('#startBtn'); const prevBtn=$('#prevBtn'); const nextBtn=$('#nextBtn'); const resetBtn=$('#resetBtn');
 const readyNextBtn = $('#readyNextBtn');
+const popoutProgressBtn = $('#popoutProgressBtn');
 
 
 const currentTitleEl = $('#currentTitle'); const sectionDescEl=$('#sectionDesc'); const linksDiv=$('#links');
@@ -2074,6 +2054,8 @@ function updateStartBtnLabel(){
 
   if(focusStartBtn) focusStartBtn.disabled = disable;
 
+  syncProgressPopout();
+
 }
 
 
@@ -2199,7 +2181,7 @@ function loop(){ if(!running) return; tick(); rafId = requestAnimationFrame(loop
 
 
 
-const markTimer = ()=>{ timerState={ sessionStarted,running,currentIndex,secondsLeft,lastSyncTs:Date.now(), awaitingNext }; saveTimerLocal(); };
+const markTimer = ()=>{ timerState={ sessionStarted,running,currentIndex,secondsLeft,outlineId: timerState?.outlineId || null,lastSyncTs:Date.now(), awaitingNext }; saveTimerLocal(); };
 
 
 
@@ -2447,6 +2429,471 @@ function jumpToSection(i){
 
   if(running) syncEnd(); renderAll(); markTimer(); updateStartBtnLabel();
 
+}
+
+let progressPopoutWindow = null;
+let progressPopoutNodes = null;
+let progressPopoutSectionsKey = '';
+let progressPopoutOptionsKey = '';
+let progressPopoutScrubbing = false;
+
+function supportsProgressPopout(){
+  return typeof window !== 'undefined' && 'documentPictureInPicture' in window;
+}
+
+function isProgressPopoutOpen(){
+  return !!(progressPopoutWindow && !progressPopoutWindow.closed);
+}
+
+function currentPopoutOutlineId(){
+  return (timerState && timerState.outlineId) ? timerState.outlineId : '__current__';
+}
+
+function updateProgressPopoutButton(){
+  if(!popoutProgressBtn) return;
+  popoutProgressBtn.textContent = isProgressPopoutOpen() ? 'Close popout' : 'Pop out';
+  popoutProgressBtn.disabled = !supportsProgressPopout();
+  if(!supportsProgressPopout()) popoutProgressBtn.title = 'Document Picture-in-Picture is not supported in this browser.';
+  else popoutProgressBtn.removeAttribute('title');
+}
+
+function closeProgressPopout(){
+  progressPopoutSectionsKey = '';
+  progressPopoutOptionsKey = '';
+  progressPopoutNodes = null;
+  progressPopoutScrubbing = false;
+  if(progressPopoutWindow && !progressPopoutWindow.closed){
+    try{ progressPopoutWindow.close(); }catch{}
+  }
+  progressPopoutWindow = null;
+  updateProgressPopoutButton();
+}
+
+function buildProgressPopout(){
+  if(!isProgressPopoutOpen()) return;
+  const doc = progressPopoutWindow.document;
+  doc.title = 'Skillflow Popout';
+  doc.documentElement.lang = 'en';
+  doc.head.innerHTML = `
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Skillflow Popout</title>
+    <style>
+      :root{
+        --bg:#f3f8ff;
+        --panel:rgba(255,255,255,.96);
+        --panel-strong:#ffffff;
+        --text:#0f172a;
+        --muted:#475569;
+        --line:#bfd3e8;
+        --accent:#0284c7;
+        --accent-soft:#dbeafe;
+        --accent-strong:#0ea5e9;
+        --ok:#059669;
+      }
+      *{box-sizing:border-box}
+      html,body{height:100%}
+      body{
+        margin:0;
+        font-family:"Segoe UI",Arial,sans-serif;
+        color:var(--text);
+        background:
+          radial-gradient(circle at top left, rgba(14,165,233,.18), transparent 42%),
+          radial-gradient(circle at bottom right, rgba(16,185,129,.14), transparent 36%),
+          var(--bg);
+      }
+      .shell{
+        min-height:100%;
+        padding:14px;
+        display:grid;
+        gap:12px;
+      }
+      .card{
+        background:var(--panel);
+        border:1px solid var(--line);
+        border-radius:18px;
+        box-shadow:0 16px 40px rgba(15,23,42,.08);
+      }
+      .hero{
+        padding:14px;
+        display:grid;
+        gap:10px;
+      }
+      .hero-top{
+        display:flex;
+        align-items:flex-start;
+        justify-content:space-between;
+        gap:12px;
+      }
+      .eyebrow{
+        font-size:11px;
+        letter-spacing:.12em;
+        text-transform:uppercase;
+        color:var(--muted);
+      }
+      .title{
+        font-size:24px;
+        font-weight:800;
+        line-height:1.1;
+        margin-top:4px;
+      }
+      .meta{
+        color:var(--muted);
+        font-size:13px;
+      }
+      .clock{
+        font-size:44px;
+        font-weight:800;
+        font-variant-numeric:tabular-nums;
+        text-align:center;
+        padding:10px 12px;
+        border-radius:16px;
+        border:1px solid color-mix(in srgb, var(--accent) 32%, var(--line));
+        background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(219,234,254,.92));
+        color:var(--accent);
+      }
+      .status{
+        text-align:center;
+        font-size:13px;
+        color:var(--muted);
+      }
+      .progress-wrap{display:grid; gap:8px}
+      .progress-bar{
+        position:relative;
+        height:18px;
+        overflow:hidden;
+        border-radius:999px;
+        border:1px solid var(--line);
+        background:rgba(255,255,255,.85);
+        cursor:pointer;
+      }
+      .progress-fill{
+        position:absolute;
+        inset:0 auto 0 0;
+        width:0%;
+        background:linear-gradient(90deg, var(--accent-soft), rgba(14,165,233,.72));
+        border-right:2px solid var(--accent);
+      }
+      .progress-segments{
+        position:absolute;
+        inset:0;
+        pointer-events:none;
+      }
+      .progress-segments span{
+        position:absolute;
+        top:0;
+        bottom:0;
+        width:2px;
+        background:rgba(2,132,199,.28);
+      }
+      .progress-meta{
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+        font-size:12px;
+        color:var(--muted);
+      }
+      .controls{
+        display:grid;
+        grid-template-columns:repeat(4, minmax(0,1fr));
+        gap:8px;
+      }
+      .btn{
+        appearance:none;
+        border:1px solid var(--line);
+        background:var(--panel-strong);
+        color:var(--text);
+        border-radius:14px;
+        padding:10px 12px;
+        font-weight:700;
+        cursor:pointer;
+      }
+      .btn.primary{
+        background:linear-gradient(180deg, var(--accent-strong), var(--accent));
+        border-color:var(--accent);
+        color:#fff;
+      }
+      .btn.secondary{
+        background:linear-gradient(180deg, rgba(5,150,105,.92), var(--ok));
+        border-color:var(--ok);
+        color:#fff;
+      }
+      .btn.ghost{background:transparent}
+      .btn:disabled{opacity:.45; cursor:not-allowed}
+      .hidden{display:none !important}
+      .session-row{
+        padding:12px 14px;
+        display:grid;
+        grid-template-columns:minmax(0,1fr) auto;
+        gap:8px;
+        align-items:center;
+      }
+      .input{
+        width:100%;
+        border:1px solid var(--line);
+        background:#fff;
+        border-radius:14px;
+        padding:10px 12px;
+        color:var(--text);
+      }
+      .sections{
+        padding:12px;
+        display:grid;
+        gap:8px;
+        max-height:240px;
+        overflow:auto;
+      }
+      .section-pill{
+        display:flex;
+        align-items:center;
+        justify-content:space-between;
+        gap:10px;
+        width:100%;
+        border:1px solid var(--line);
+        background:rgba(255,255,255,.92);
+        border-radius:14px;
+        padding:10px 12px;
+        cursor:pointer;
+        color:inherit;
+        text-align:left;
+      }
+      .section-pill.active{
+        background:var(--accent-soft);
+        border-color:rgba(2,132,199,.42);
+      }
+      .section-name{
+        overflow:hidden;
+        text-overflow:ellipsis;
+        white-space:nowrap;
+        font-weight:700;
+      }
+      .section-time{
+        color:var(--muted);
+        font-size:12px;
+        white-space:nowrap;
+      }
+      .empty{
+        padding:18px 14px;
+        text-align:center;
+        color:var(--muted);
+        font-size:13px;
+      }
+      .footer{
+        display:flex;
+        justify-content:space-between;
+        gap:8px;
+      }
+    </style>`;
+  doc.body.innerHTML = `
+    <div class="shell">
+      <section class="card hero">
+        <div class="hero-top">
+          <div>
+            <div class="eyebrow">Always on top</div>
+            <div id="popoutTitle" class="title">Ready to focus</div>
+            <div id="popoutMeta" class="meta">Pick a session on the main page to begin.</div>
+          </div>
+          <button id="popoutOpenMainBtn" class="btn ghost" type="button">Open app</button>
+        </div>
+        <div id="popoutClock" class="clock">00:00</div>
+        <div id="popoutStatus" class="status">Ready</div>
+        <div class="progress-wrap">
+          <div id="popoutProgressBar" class="progress-bar" role="slider" tabindex="0" aria-label="Popout session progress">
+            <div id="popoutProgressFill" class="progress-fill"></div>
+            <div id="popoutProgressSegments" class="progress-segments"></div>
+          </div>
+          <div class="progress-meta">
+            <span id="popoutProgressLabel">0%</span>
+            <span id="popoutTimeLeft">0:00 left</span>
+          </div>
+        </div>
+        <div class="controls">
+          <button id="popoutPrevBtn" class="btn" type="button">Prev</button>
+          <button id="popoutToggleBtn" class="btn primary" type="button">Start</button>
+          <button id="popoutReadyBtn" class="btn secondary hidden" type="button">Ready next</button>
+          <button id="popoutNextBtn" class="btn" type="button">Next</button>
+        </div>
+      </section>
+      <section class="card session-row">
+        <select id="popoutSessionSelect" class="input"></select>
+        <button id="popoutLoadBtn" class="btn" type="button">Load</button>
+      </section>
+      <section id="popoutSections" class="card sections"></section>
+      <div class="footer">
+        <button id="popoutResetBtn" class="btn ghost" type="button">Reset</button>
+        <button id="popoutCloseBtn" class="btn ghost" type="button">Close</button>
+      </div>
+    </div>`;
+  progressPopoutNodes = {
+    clock: doc.getElementById('popoutClock'),
+    closeBtn: doc.getElementById('popoutCloseBtn'),
+    loadBtn: doc.getElementById('popoutLoadBtn'),
+    meta: doc.getElementById('popoutMeta'),
+    nextBtn: doc.getElementById('popoutNextBtn'),
+    openMainBtn: doc.getElementById('popoutOpenMainBtn'),
+    prevBtn: doc.getElementById('popoutPrevBtn'),
+    progressBar: doc.getElementById('popoutProgressBar'),
+    progressFill: doc.getElementById('popoutProgressFill'),
+    progressLabel: doc.getElementById('popoutProgressLabel'),
+    progressSegments: doc.getElementById('popoutProgressSegments'),
+    readyBtn: doc.getElementById('popoutReadyBtn'),
+    resetBtn: doc.getElementById('popoutResetBtn'),
+    sections: doc.getElementById('popoutSections'),
+    sessionSelect: doc.getElementById('popoutSessionSelect'),
+    status: doc.getElementById('popoutStatus'),
+    timeLeft: doc.getElementById('popoutTimeLeft'),
+    title: doc.getElementById('popoutTitle'),
+    toggleBtn: doc.getElementById('popoutToggleBtn')
+  };
+  progressPopoutNodes.openMainBtn.onclick = ()=>{ try{ window.focus(); showTab('homeTab'); }catch{} };
+  progressPopoutNodes.closeBtn.onclick = closeProgressPopout;
+  progressPopoutNodes.toggleBtn.onclick = ()=> startBtn.click();
+  progressPopoutNodes.readyBtn.onclick = ()=> readyNextBtn.click();
+  progressPopoutNodes.prevBtn.onclick = ()=> prevBtn.click();
+  progressPopoutNodes.nextBtn.onclick = ()=> nextBtn.click();
+  progressPopoutNodes.resetBtn.onclick = ()=> resetBtn.click();
+  progressPopoutNodes.loadBtn.onclick = ()=>{
+    const selectedId = progressPopoutNodes.sessionSelect.value;
+    progressPopoutNodes.sessionSelect.dataset.pendingValue = '';
+    if(selectedId === '__current__') return;
+    const outline = savedOutlines.find(o=> o.id === selectedId);
+    if(outline) applyOutlineToCurrent(outline);
+  };
+  progressPopoutNodes.sessionSelect.onchange = ()=>{
+    progressPopoutNodes.sessionSelect.dataset.pendingValue = progressPopoutNodes.sessionSelect.value;
+  };
+  progressPopoutNodes.progressBar.addEventListener('pointerdown', (e)=>{
+    progressPopoutScrubbing = true;
+    try{ progressPopoutNodes.progressBar.setPointerCapture(e.pointerId); }catch{}
+    const rect = progressPopoutNodes.progressBar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, ((e.clientX||0) - rect.left) / Math.max(1, rect.width)));
+    jumpFromPct(ratio);
+  });
+  progressPopoutNodes.progressBar.addEventListener('pointermove', (e)=>{
+    if(!progressPopoutScrubbing) return;
+    const rect = progressPopoutNodes.progressBar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, ((e.clientX||0) - rect.left) / Math.max(1, rect.width)));
+    jumpFromPct(ratio);
+  });
+  progressPopoutNodes.progressBar.addEventListener('pointerup', ()=>{ progressPopoutScrubbing = false; });
+  progressPopoutNodes.progressBar.addEventListener('pointercancel', ()=>{ progressPopoutScrubbing = false; });
+  progressPopoutNodes.progressBar.addEventListener('keydown', (e)=>{
+    const total = scheduleTotalSecs(currentSession);
+    if(!total) return;
+    const currentPct = total ? (elapsedSeconds(currentSession,currentIndex,secondsLeft) / total) : 0;
+    if(e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+      e.preventDefault();
+      const delta = e.shiftKey ? .1 : .03;
+      jumpFromPct(Math.max(0, Math.min(1, currentPct + (e.key === 'ArrowRight' ? delta : -delta))));
+    }
+    if(e.key === 'Home'){ e.preventDefault(); jumpFromPct(0); }
+    if(e.key === 'End'){ e.preventDefault(); jumpFromPct(1); }
+  });
+}
+
+function syncProgressPopout(){
+  if(!isProgressPopoutOpen() || !progressPopoutNodes) return;
+  const total = scheduleTotalSecs(currentSession);
+  const elapsed = total ? elapsedSeconds(currentSession,currentIndex,secondsLeft) : 0;
+  const pct = total ? Math.min(100, Math.max(0, (elapsed / total) * 100)) : 0;
+  const sec = currentSession[currentIndex];
+  const outlineId = currentPopoutOutlineId();
+  const statusText = awaitingNext ? 'Ready for the next section' : (running ? 'Running' : (sessionStarted ? 'Paused' : 'Ready'));
+  progressPopoutNodes.title.textContent = sec?.name || 'Ready to focus';
+  progressPopoutNodes.meta.textContent = sec
+    ? `Section ${Math.min(currentIndex+1, currentSession.length)} of ${currentSession.length} • ${Number(sec.minutes||0)}m`
+    : 'Pick or create a session on the main page to begin.';
+  progressPopoutNodes.clock.textContent = secsToClock(secondsLeft);
+  progressPopoutNodes.status.textContent = statusText;
+  progressPopoutNodes.progressFill.style.width = pct + '%';
+  progressPopoutNodes.progressLabel.textContent = Math.floor(pct) + '%';
+  progressPopoutNodes.timeLeft.textContent = `${secsToClock(Math.max(0, total - elapsed))} left`;
+  progressPopoutNodes.progressBar.setAttribute('aria-valuenow', String(Math.round(pct)));
+  progressPopoutNodes.progressBar.setAttribute('aria-valuetext', `${Math.floor(pct)} percent complete`);
+  progressPopoutNodes.toggleBtn.textContent = awaitingNext ? 'Waiting' : (running ? 'Pause' : (sessionStarted ? 'Resume' : 'Start'));
+  progressPopoutNodes.toggleBtn.disabled = !currentSession.length || awaitingNext;
+  progressPopoutNodes.prevBtn.disabled = !currentSession.length || currentIndex <= 0;
+  progressPopoutNodes.nextBtn.disabled = !currentSession.length || currentIndex >= currentSession.length - 1;
+  progressPopoutNodes.readyBtn.classList.toggle('hidden', !awaitingNext);
+  progressPopoutNodes.readyBtn.disabled = !awaitingNext;
+  progressPopoutNodes.resetBtn.disabled = !currentSession.length;
+  const optionsKey = JSON.stringify(savedOutlines.map(o=>[o.id, o.title || 'Untitled']));
+  if(optionsKey !== progressPopoutOptionsKey){
+    progressPopoutOptionsKey = optionsKey;
+    progressPopoutNodes.sessionSelect.innerHTML = `
+      <option value="__current__">Current session</option>
+      ${savedOutlines.map(o=>`<option value="${escapeHtml(o.id)}">${escapeHtml(o.title || 'Untitled')}</option>`).join('')}`;
+  }
+  if(progressPopoutNodes.sessionSelect !== progressPopoutWindow.document.activeElement){
+    const pendingValue = progressPopoutNodes.sessionSelect.dataset.pendingValue || outlineId;
+    const hasPending = Array.from(progressPopoutNodes.sessionSelect.options).some(opt=> opt.value === pendingValue);
+    progressPopoutNodes.sessionSelect.value = hasPending ? pendingValue : outlineId;
+  }
+  progressPopoutNodes.loadBtn.disabled = !savedOutlines.length || progressPopoutNodes.sessionSelect.value === '__current__';
+
+  const sectionKey = JSON.stringify(currentSession.map((s,i)=>[s?.id||i, s?.name||'', Number(s?.minutes||0), i===currentIndex]));
+  if(sectionKey !== progressPopoutSectionsKey){
+    progressPopoutSectionsKey = sectionKey;
+    progressPopoutNodes.sections.innerHTML = currentSession.length
+      ? currentSession.map((section, i)=>`
+          <button type="button" class="section-pill ${i===currentIndex ? 'active' : ''}" data-popout-idx="${i}">
+            <span class="section-name">${escapeHtml(section?.name || 'Untitled')}</span>
+            <span class="section-time">${escapeHtml(String(section?.minutes || 0))}m</span>
+          </button>`).join('')
+      : `<div class="empty">No active session.</div>`;
+    progressPopoutNodes.sections.querySelectorAll('[data-popout-idx]').forEach(btn=>{
+      btn.onclick = ()=> jumpToSection(Number(btn.dataset.popoutIdx));
+    });
+  }
+
+  progressPopoutNodes.progressSegments.innerHTML = '';
+  if(total && currentSession.length > 1){
+    let cumulative = 0;
+    for(let i=1;i<currentSession.length;i++){
+      cumulative += minsToSecs(currentSession[i-1].minutes || 0);
+      const tick = progressPopoutWindow.document.createElement('span');
+      tick.style.left = ((cumulative / total) * 100) + '%';
+      progressPopoutNodes.progressSegments.appendChild(tick);
+    }
+  }
+}
+
+async function openProgressPopout(){
+  if(!supportsProgressPopout()){
+    showToast('Document Picture-in-Picture is not supported in this browser.','error');
+    return;
+  }
+  if(isProgressPopoutOpen()){
+    try{ progressPopoutWindow.focus(); }catch{}
+    return;
+  }
+  try{
+    progressPopoutWindow = await window.documentPictureInPicture.requestWindow({ width: 408, height: 560 });
+    progressPopoutWindow.addEventListener('pagehide', ()=>{
+      progressPopoutWindow = null;
+      progressPopoutNodes = null;
+      progressPopoutSectionsKey = '';
+      progressPopoutOptionsKey = '';
+      progressPopoutScrubbing = false;
+      updateProgressPopoutButton();
+    }, { once:true });
+    buildProgressPopout();
+    syncProgressPopout();
+    updateProgressPopoutButton();
+  }catch(err){
+    showToast(err?.message || 'Could not open the progress popout.','error');
+    closeProgressPopout();
+  }
+}
+
+async function toggleProgressPopout(){
+  if(isProgressPopoutOpen()) closeProgressPopout();
+  else await openProgressPopout();
+}
+
+if(popoutProgressBtn){
+  updateProgressPopoutButton();
+  popoutProgressBtn.onclick = ()=>{ toggleProgressPopout(); };
 }
 
 
@@ -3341,6 +3788,8 @@ function renderHomeSavedBar(){
     btn.onclick = ()=>{ const o = savedOutlines.find(x=>x.id===btn.dataset.oid); if(o){ applyOutlineToCurrent(o); requestAnimationFrame(renderHomeSavedBar); } };
 
   });
+
+  syncProgressPopout();
 
 }
 
@@ -4893,14 +5342,16 @@ function renderCurrent(){ const s=currentSession[currentIndex];
 
 }
 
-function renderAll(){ renderOutline(); buildProgress(); updateProgress(); renderCurrent(); }
+function renderAll(){ renderOutline(); buildProgress(); updateProgress(); renderCurrent(); syncProgressPopout(); }
 
 
 
 setTimerFromState(timerState); renderAll(); renderHomeSavedBar();
-// Land on route from URL (default Overview)
-applyRouteFromHash();
-if(prefs.focusDefault) showFocus();
+// Land on route from URL (default Overview) after the rest of the page helpers exist.
+queueMicrotask(()=>{
+  applyRouteFromHash();
+  if(prefs.focusDefault) showFocus();
+});
 
 
 
@@ -4963,6 +5414,8 @@ createFolderConfirm.onclick = ()=>{
 
 
 function renderFoldersUI(){
+
+  if(!folderCrumbs || !folderGrid) return;
 
   // Breadcrumbs
 
@@ -5048,17 +5501,38 @@ function renderFoldersUI(){
 
   // Folder icons grid (with delete bins)
 
-  folderGrid.innerHTML = savedFolders.filter(f=> (f.parentId||null) === (currentFolderId||null)).map(f=>`
+  const visibleFolders = savedFolders.filter(f=> (f.parentId||null) === (currentFolderId||null));
+  folderGrid.innerHTML = visibleFolders.length
+    ? visibleFolders.map(f=>{
+        const outlineCount = savedOutlines.filter(o=>o.folderId === f.id).length;
+        const childCount = savedFolders.filter(x=>(x.parentId||null) === f.id).length;
+        const meta = [
+          `${outlineCount} ${outlineCount===1 ? 'outline' : 'outlines'}`,
+          childCount ? `${childCount} ${childCount===1 ? 'subfolder' : 'subfolders'}` : ''
+        ].filter(Boolean).join('  |  ');
+        return `
 
     <div class="folder-card" data-fid="${f.id}" title="${escapeHtml(f.name)}" draggable="true">
 
-      <button class="folder-del" data-act="del-folder" title="Delete folder">🗑️</button>
+      <div class="folder-card-top">
+        <div class="folder-icon"></div>
+        <div class="folder-actions">
+          <button class="folder-del" data-act="del-folder" title="Delete folder">Delete</button>
+        </div>
+      </div>
 
-      <div class="folder-icon"></div>
+      <div class="folder-name-wrap">
+        <div class="folder-name truncate">${escapeHtml(f.name)}</div>
+        <div class="folder-meta">${escapeHtml(meta)}</div>
+      </div>
 
-      <div class="folder-name truncate">${escapeHtml(f.name)}</div>
-
-    </div>`).join('');
+    </div>`;
+      }).join('')
+    : `
+    <div class="folder-empty-state">
+      <div class="folder-empty-title">${currentFolderId ? 'No subfolders here yet.' : 'Everything currently lives in Main.'}</div>
+      <div class="folder-empty-copy">${currentFolderId ? 'Create a subfolder if you want another layer of organisation.' : 'Create a folder when you want to group related outlines together.'}</div>
+    </div>`;
 
   folderGrid.querySelectorAll('.folder-card').forEach(card=>{
 

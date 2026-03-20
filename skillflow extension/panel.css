@@ -13,6 +13,12 @@
 }
 
 .brand{display:flex; align-items:center; gap:.6rem; min-width:0}
+.topbar-actions{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  margin-left:auto;
+}
 .brand-logo{
   width:36px;
   height:36px;
@@ -24,17 +30,37 @@
 .brand-text{display:flex; flex-direction:column}
 .brand-title{font-weight:800; letter-spacing:.2px}
 .brand-sub{font-size:.72rem; color:var(--muted); margin-top:-2px}
+.account-inline{
+  display:grid;
+  gap:2px;
+  justify-items:end;
+  min-width:0;
+}
+.account-chip{
+  max-width:140px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+}
+.account-inline-hint{
+  max-width:150px;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  text-align:right;
+  font-size:.72rem;
+}
 
 .panel-body{
-  padding:16px 16px 24px;
+  padding:14px 14px 22px;
   display:grid;
-  gap:16px;
+  gap:14px;
 }
 
 .card{
-  padding:16px;
+  padding:14px;
   display:grid;
-  gap:12px;
+  gap:10px;
 }
 
 .card-header{
@@ -43,17 +69,6 @@
   justify-content:space-between;
   gap:12px;
 }
-
-.account-body{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  gap:12px;
-  flex-wrap:wrap;
-}
-
-.account-actions{display:flex; gap:8px; flex-wrap:wrap}
-.account-hint{font-size:.85rem}
 
 .session-picker{
   display:flex;
@@ -84,6 +99,15 @@
   border:var(--borderW) solid var(--border);
   background:#fff;
   overflow:hidden;
+  cursor:pointer;
+}
+.progress-host[aria-disabled="true"]{
+  cursor:default;
+  opacity:.72;
+}
+.progress-host:focus-visible{
+  outline:2px solid var(--accent-100);
+  box-shadow:0 0 0 2px rgba(14,165,233,.25);
 }
 .progress-fill{
   position:absolute;
@@ -104,11 +128,19 @@
   width:2px;
   background:color-mix(in srgb,var(--accent) 40%, transparent);
 }
+.progress-caption{
+  margin-top:-2px;
+  font-size:.78rem;
+  text-align:center;
+}
 
 .timer-controls{
   display:flex;
   flex-wrap:wrap;
   gap:8px;
+}
+.timer-controls .btn{
+  flex:1 1 calc(20% - 8px);
 }
 
 .sections-list{
@@ -135,6 +167,13 @@
 }
 
 .section-item:hover{background:var(--panel-muted); transform:translateY(-1px)}
+.section-item[aria-disabled="true"]{
+  cursor:default;
+}
+.section-item[aria-disabled="true"]:hover{
+  background:#fff;
+  transform:none;
+}
 .section-item.active{background:var(--accent-100); box-shadow:inset 0 0 0 1px rgba(14,165,233,.5)}
 .section-title{font-weight:600; font-size:.95rem; flex:1 1 auto}
 .section-time{font-size:.85rem; color:var(--muted)}
@@ -145,6 +184,21 @@
 }
 
 @media (max-width:380px){
+  .panel-topbar{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .topbar-actions{
+    width:100%;
+    justify-content:space-between;
+  }
+  .account-inline{
+    justify-items:start;
+  }
+  .account-inline-hint{
+    max-width:none;
+    text-align:left;
+  }
   .panel-body{padding:12px}
   .card{padding:14px}
   .timer-clock{font-size:2rem}

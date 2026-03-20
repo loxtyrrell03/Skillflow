@@ -1,6 +1,7 @@
 import { auth, db } from "./firebase.js";
-import { onAuthStateChanged, signOut } from "./vendor/firebase-auth.js";
-import { doc, getDoc } from "./vendor/firebase-firestore.js";
+import { AUTH_SESSION_KEY, clearAuthSession, readAuthSession } from "./auth-session.js";
+import { GoogleAuthProvider, onAuthStateChanged, signInWithCredential, signOut } from "./vendor/firebase-auth.js";
+import { doc, onSnapshot } from "./vendor/firebase-firestore.js";
 
 const statusEl = document.getElementById("status");
 const cloudStatusEl = document.getElementById("cloudStatus");
@@ -19,6 +20,8 @@ const currentTitle = document.getElementById("currentTitle");
 const sectionBadge = document.getElementById("sectionBadge");
 const timerClock = document.getElementById("timerClock");
 const timerMeta = document.getElementById("timerMeta");
+const progressHost = document.getElementById("progressHost");
+const progressCaption = document.getElementById("progressCaption");
 const progressFill = document.getElementById("progressFill");
 const progressSegments = document.getElementById("progressSegments");
 
@@ -46,12 +49,60 @@ const state = {
   secondsLeft: 0,
   running: false,
   sessionStarted: false,
+  awaitingNext: false,
   endTimeMs: null,
   totalSeconds: 0
 };
 
 let cachedTimerState = null;
 let tickId = null;
+let authRestorePromise = null;
+let remoteSnapshotUnsubscribe = null;
+
+const clearIdentityTokens = async () => {
+  if (!chrome?.identity?.clearAllCachedAuthTokens) return;
+
+  await new Promise((resolve) => {
+    chrome.identity.clearAllCachedAuthTokens(() => resolve());
+  });
+};
+
+const restoreAuthFromSession = async (session, { reportError = false } = {}) => {
+  if (!session?.accessToken) return false;
+  if (auth.currentUser?.uid === session.uid) return true;
+  if (authRestorePromise) return authRestorePromise;
+
+  authRestorePromise = (async () => {
+    try {
+      setCloudStatus("Restoring session...");
+      const credential = GoogleAuthProvider.credential(null, session.accessToken);
+      await signInWithCredential(auth, credential);
+      return true;
+    } catch (error) {
+      if (reportError) {
+        setStatus(
+          error?.message || "The panel could not restore the signed-in session. Please sign in again.",
+          "error"
+        );
+      }
+      return false;
+    } finally {
+      authRestorePromise = null;
+    }
+  })();
+
+  return authRestorePromise;
+};
+
+const userDocRef = (uid) => doc(db, "users", uid, "apps", "chess_planner_v2");
+
+const isCloudMirrorMode = () => !!state.user;
+
+const clearRemoteSubscription = () => {
+  if (!remoteSnapshotUnsubscribe) return;
+  remoteSnapshotUnsubscribe();
+  remoteSnapshotUnsubscribe = null;
+};
 
 const setStatus = (message, tone = "") => {
   if (!statusEl) return;
@@ -88,6 +139,8 @@ const formatTime = (seconds) => {
 const calcTotalSeconds = (sections) =>
   sections.reduce((sum, section) => sum + Math.max(0, Number(section.minutes) || 0) * 60, 0);
 
+const getSectionSeconds = (section) => Math.max(0, Number(section?.minutes) || 0) * 60;
+
 const normalizeSections = (rawSections) =>
   (Array.isArray(rawSections) ? rawSections : []).map((section, index) => ({
     id: section.id || `S${index + 1}`,
@@ -102,19 +155,183 @@ const normalizeOutline = (rawOutline, index) => ({
   sections: normalizeSections(rawOutline.sections || [])
 });
 
+const buildRemoteOutlines = (data) => {
+  const outlines = [];
+
+  if (Array.isArray(data.currentSession) && data.currentSession.length) {
+    outlines.push({
+      id: "__current__",
+      title: "Current session",
+      sections: normalizeSections(data.currentSession)
+    });
+  }
+
+  if (Array.isArray(data.savedOutlines)) {
+    data.savedOutlines.forEach((outline, index) => {
+      outlines.push(normalizeOutline(outline, index));
+    });
+  }
+
+  return outlines;
+};
+
+const applySharedTimerState = (sharedTimer) => {
+  const sections = state.activeOutline?.sections || [];
+  if (!sections.length) {
+    state.currentIndex = 0;
+    state.secondsLeft = 0;
+    state.running = false;
+    state.sessionStarted = false;
+    state.awaitingNext = false;
+    state.endTimeMs = null;
+    renderAll();
+    return;
+  }
+
+  const maxIndex = Math.max(0, sections.length - 1);
+  const storedIndex = Number.isFinite(sharedTimer?.currentIndex) ? sharedTimer.currentIndex : 0;
+  const safeIndex = Math.min(Math.max(storedIndex, 0), maxIndex);
+  const fallbackSeconds = getSectionSeconds(sections[safeIndex]);
+  const storedSeconds = Number.isFinite(sharedTimer?.secondsLeft) ? sharedTimer.secondsLeft : fallbackSeconds;
+
+  state.currentIndex = safeIndex;
+  state.secondsLeft = Math.max(0, storedSeconds);
+  state.sessionStarted = !!sharedTimer?.sessionStarted;
+  state.awaitingNext = !!sharedTimer?.awaitingNext;
+  state.running = false;
+  state.endTimeMs = null;
+
+  if (sharedTimer?.running && Number.isFinite(sharedTimer?.lastSyncTs)) {
+    let delta = Math.floor((Date.now() - sharedTimer.lastSyncTs) / 1000);
+    let idx = state.currentIndex;
+    let remain = state.secondsLeft;
+
+    while (delta > 0 && sections[idx]) {
+      if (delta >= remain) {
+        delta -= remain;
+        idx += 1;
+        remain = sections[idx] ? getSectionSeconds(sections[idx]) : 0;
+      } else {
+        remain -= delta;
+        delta = 0;
+      }
+    }
+
+    state.currentIndex = Math.min(idx, maxIndex);
+    state.secondsLeft = Math.max(0, remain || 0);
+    state.running = idx <= maxIndex && state.secondsLeft > 0;
+    if (state.running) {
+      state.endTimeMs = Date.now() + state.secondsLeft * 1000;
+    }
+  }
+
+  if (tickId) {
+    clearInterval(tickId);
+    tickId = null;
+  }
+
+  if (state.running) {
+    tickId = setInterval(tick, 250);
+    tick();
+  } else {
+    renderAll();
+  }
+};
+
+const applyRemoteSnapshot = async (data) => {
+  const outlines = buildRemoteOutlines(data);
+  state.outlines = outlines;
+  await storage.set({ savedOutlines: outlines });
+  renderSessionSelect();
+
+  const hasCurrentOutline = outlines.some((outline) => outline.id === "__current__");
+  const requestedOutlineId = hasCurrentOutline ? "__current__" : data?.timer?.outlineId || state.activeOutlineId || null;
+  const nextOutline =
+    (requestedOutlineId ? outlines.find((outline) => outline.id === requestedOutlineId) : null) ||
+    outlines.find((outline) => outline.id === "__current__") ||
+    outlines[0] ||
+    null;
+
+  if (!nextOutline) {
+    setCloudStatus("Live sync on");
+    setStatus("No cloud sessions found.", "warning");
+    renderAll();
+    return;
+  }
+
+  state.activeOutline = nextOutline;
+  state.activeOutlineId = nextOutline.id;
+  state.totalSeconds = calcTotalSeconds(nextOutline.sections);
+  if (sessionSelect.value !== nextOutline.id) {
+    sessionSelect.value = nextOutline.id;
+  }
+
+  applySharedTimerState(data?.timer || null);
+  renderSessionMeta(nextOutline, true);
+  renderProgressSegments();
+  renderAll();
+  saveTimerState();
+  setCloudStatus("Live sync on");
+  setStatus("", "");
+};
+
+const subscribeRemoteState = (user) => {
+  if (!user) return;
+
+  clearRemoteSubscription();
+  setCloudStatus("Syncing...");
+
+  remoteSnapshotUnsubscribe = onSnapshot(
+    userDocRef(user.uid),
+    (snap) => {
+      if (!snap.exists()) {
+        state.outlines = [];
+        state.activeOutline = null;
+        state.activeOutlineId = null;
+        state.currentIndex = 0;
+        state.secondsLeft = 0;
+        state.running = false;
+        state.sessionStarted = false;
+        state.awaitingNext = false;
+        state.endTimeMs = null;
+        state.totalSeconds = 0;
+        renderSessionSelect();
+        renderAll();
+        setCloudStatus("Live sync on");
+        setStatus("No cloud sessions found.", "warning");
+        return;
+      }
+
+      applyRemoteSnapshot(snap.data() || {}).catch((error) => {
+        setCloudStatus("Cloud sync failed");
+        setStatus(error?.message || "Cloud sync failed.", "error");
+      });
+    },
+    (error) => {
+      setCloudStatus("Cloud sync failed");
+      setStatus(error?.message || "Cloud sync failed.", "error");
+    }
+  );
+};
+
 const updateAccountUI = (user) => {
   if (user) {
-    accountStateEl.textContent = user.email || user.uid;
-    accountHintEl.textContent = "Cloud sync enabled.";
-    openLoginBtn.textContent = "Open login";
+    accountStateEl.textContent = "Sync on";
+    accountHintEl.textContent = user.email || "Cloud sync enabled.";
+    openLoginBtn.classList.add("hidden");
     signOutBtn.classList.remove("hidden");
     setCloudStatus("Syncing...");
+    refreshBtn.textContent = "Reconnect";
+    refreshBtn.title = "Reconnect the live Skillflow sync.";
   } else {
-    accountStateEl.textContent = "Not signed in";
-    accountHintEl.textContent = "Sign in to sync sessions from Skillflow.";
+    accountStateEl.textContent = "Local mode";
+    accountHintEl.textContent = "Sign in to sync";
+    openLoginBtn.classList.remove("hidden");
     openLoginBtn.textContent = "Sign in";
     signOutBtn.classList.add("hidden");
     setCloudStatus("Local mode");
+    refreshBtn.textContent = "Refresh";
+    refreshBtn.title = "Refresh the local extension cache.";
   }
 };
 
@@ -124,6 +341,10 @@ function renderSessionMeta(outline, isActive) {
     return;
   }
   const totalMinutes = Math.round(calcTotalSeconds(outline.sections) / 60);
+  if (isCloudMirrorMode() && outline.id === "__current__") {
+    sessionMeta.textContent = `${outline.sections.length} sections, ${totalMinutes} min live from Skillflow`;
+    return;
+  }
   sessionMeta.textContent = `${outline.sections.length} sections, ${totalMinutes} min${isActive ? " loaded" : ""}`;
 }
 
@@ -144,6 +365,7 @@ const renderSessionSelect = () => {
     state.secondsLeft = 0;
     state.running = false;
     state.sessionStarted = false;
+    state.awaitingNext = false;
     state.endTimeMs = null;
     if (tickId) {
       clearInterval(tickId);
@@ -177,6 +399,7 @@ const renderSessionSelect = () => {
 const renderSections = () => {
   sectionsList.innerHTML = "";
   const sections = state.activeOutline?.sections || [];
+  const mirrorMode = isCloudMirrorMode();
   emptySections.classList.toggle("hidden", sections.length > 0);
 
   sections.forEach((section, index) => {
@@ -184,6 +407,7 @@ const renderSections = () => {
     li.className = "section-item";
     if (index === state.currentIndex) li.classList.add("active");
     li.dataset.index = String(index);
+    li.setAttribute("aria-disabled", mirrorMode ? "true" : "false");
 
     const title = document.createElement("span");
     title.className = "section-title";
@@ -205,7 +429,7 @@ const renderProgressSegments = () => {
 
   let acc = 0;
   sections.forEach((section, index) => {
-    acc += Math.max(0, Number(section.minutes) || 0) * 60;
+    acc += getSectionSeconds(section);
     if (index === sections.length - 1) return;
     const line = document.createElement("span");
     line.style.left = `${(acc / state.totalSeconds) * 100}%`;
@@ -213,10 +437,69 @@ const renderProgressSegments = () => {
   });
 };
 
+const getElapsedSeconds = () => {
+  if (!state.sessionStarted || state.totalSeconds <= 0) return 0;
+
+  const sections = state.activeOutline?.sections || [];
+  const completed = sections
+    .slice(0, state.currentIndex)
+    .reduce((sum, section) => sum + getSectionSeconds(section), 0);
+  const currentTotal = getSectionSeconds(sections[state.currentIndex]);
+  const elapsedCurrent = Math.max(0, currentTotal - state.secondsLeft);
+
+  return Math.min(state.totalSeconds, completed + elapsedCurrent);
+};
+
+const setElapsedPosition = (targetElapsed) => {
+  if (isCloudMirrorMode()) return;
+
+  const sections = state.activeOutline?.sections || [];
+  if (!sections.length || !state.totalSeconds) return;
+
+  const clampedElapsed = Math.max(0, Math.min(Math.round(targetElapsed), state.totalSeconds));
+
+  if (clampedElapsed >= state.totalSeconds) {
+    state.currentIndex = sections.length - 1;
+    state.secondsLeft = 0;
+    state.sessionStarted = true;
+    state.running = false;
+    state.endTimeMs = null;
+    if (tickId) {
+      clearInterval(tickId);
+      tickId = null;
+    }
+    renderAll();
+    saveTimerState();
+    return;
+  }
+
+  let traversed = 0;
+  for (let index = 0; index < sections.length; index += 1) {
+    const sectionSeconds = getSectionSeconds(sections[index]);
+    const sectionEnd = traversed + sectionSeconds;
+
+    if (clampedElapsed < sectionEnd || index === sections.length - 1) {
+      const elapsedInSection = Math.max(0, clampedElapsed - traversed);
+      state.currentIndex = index;
+      state.secondsLeft = Math.max(0, sectionSeconds - elapsedInSection);
+      state.sessionStarted = clampedElapsed > 0;
+      if (state.running) {
+        state.endTimeMs = Date.now() + state.secondsLeft * 1000;
+      }
+      renderAll();
+      saveTimerState();
+      return;
+    }
+
+    traversed = sectionEnd;
+  }
+};
+
 const renderTimer = () => {
   const sections = state.activeOutline?.sections || [];
   const currentSection = sections[state.currentIndex];
   const hasSession = sections.length > 0;
+  const mirrorMode = isCloudMirrorMode();
 
   currentTitle.textContent = currentSection?.name || "Ready to focus";
   timerClock.textContent = formatTime(state.secondsLeft);
@@ -224,29 +507,29 @@ const renderTimer = () => {
 
   if (!hasSession) {
     timerMeta.textContent = "Select a session";
+  } else if (state.awaitingNext) {
+    timerMeta.textContent = mirrorMode ? "Waiting for next on Skillflow" : "Ready for next";
   } else if (state.running) {
-    timerMeta.textContent = "Running";
+    timerMeta.textContent = mirrorMode ? "Running live from Skillflow" : "Running";
   } else if (state.sessionStarted && state.secondsLeft === 0 && state.currentIndex === sections.length - 1) {
     timerMeta.textContent = "Session complete";
   } else if (state.sessionStarted) {
-    timerMeta.textContent = "Paused";
+    timerMeta.textContent = mirrorMode ? "Paused on Skillflow" : "Paused";
   } else {
-    timerMeta.textContent = "Ready";
+    timerMeta.textContent = mirrorMode ? "Ready on Skillflow" : "Ready";
   }
 };
 
 const renderProgress = () => {
-  let percent = 0;
-  if (state.sessionStarted && state.totalSeconds > 0) {
-    const sections = state.activeOutline?.sections || [];
-    const completed = sections
-      .slice(0, state.currentIndex)
-      .reduce((sum, section) => sum + Math.max(0, Number(section.minutes) || 0) * 60, 0);
-    const currentTotal = Math.max(0, Number(sections[state.currentIndex]?.minutes) || 0) * 60;
-    const elapsedCurrent = Math.max(0, currentTotal - state.secondsLeft);
-    percent = Math.min(100, ((completed + elapsedCurrent) / state.totalSeconds) * 100);
-  }
+  const elapsed = getElapsedSeconds();
+  const percent = state.totalSeconds > 0 ? Math.min(100, (elapsed / state.totalSeconds) * 100) : 0;
   progressFill.style.width = `${percent}%`;
+  if (progressHost) {
+    progressHost.setAttribute("aria-valuemax", String(state.totalSeconds || 0));
+    progressHost.setAttribute("aria-valuemin", "0");
+    progressHost.setAttribute("aria-valuenow", String(elapsed));
+    progressHost.setAttribute("aria-valuetext", `${Math.round(percent)}% complete`);
+  }
 };
 
 const renderTotals = () => {
@@ -257,14 +540,31 @@ const renderTotals = () => {
 const updateControls = () => {
   const sections = state.activeOutline?.sections || [];
   const hasSession = sections.length > 0;
+  const mirrorMode = isCloudMirrorMode();
 
-  prevBtn.disabled = !hasSession || state.currentIndex <= 0;
-  nextBtn.disabled = !hasSession || state.currentIndex >= sections.length - 1;
-  startBtn.disabled = !hasSession;
-  stopBtn.disabled = !hasSession;
+  prevBtn.disabled = mirrorMode || !hasSession || state.currentIndex <= 0;
+  nextBtn.disabled = mirrorMode || !hasSession || state.currentIndex >= sections.length - 1;
+  startBtn.disabled = mirrorMode || !hasSession;
+  pauseBtn.disabled = mirrorMode || !state.running;
+  stopBtn.disabled = mirrorMode || !hasSession;
+  loadSessionBtn.disabled = mirrorMode || sessionSelect.disabled || !sessionSelect.value;
 
-  startBtn.classList.toggle("hidden", state.running);
-  pauseBtn.classList.toggle("hidden", !state.running);
+  startBtn.classList.toggle("hidden", state.running && !mirrorMode);
+  pauseBtn.classList.toggle("hidden", !state.running || mirrorMode);
+  if (progressHost) {
+    progressHost.setAttribute("aria-disabled", hasSession && !mirrorMode ? "false" : "true");
+  }
+  if (progressCaption) {
+    if (mirrorMode && !hasSession) {
+      progressCaption.textContent = "No live session found yet. Start or load one in Skillflow to mirror it here.";
+    } else if (!hasSession) {
+      progressCaption.textContent = "Load a session to start focusing.";
+    } else if (mirrorMode) {
+      progressCaption.textContent = "Live sync from Skillflow. Use the website or pop-out mini-window to control the timer.";
+    } else {
+      progressCaption.textContent = "Click the bar to jump within the session.";
+    }
+  }
 };
 
 const renderAll = () => {
@@ -305,6 +605,8 @@ const setActiveOutline = (outlineId, resetTimer = true) => {
 };
 
 const setCurrentIndex = (index) => {
+  if (isCloudMirrorMode()) return;
+
   const sections = state.activeOutline?.sections || [];
   if (!sections.length) return;
   const nextIndex = Math.min(Math.max(index, 0), sections.length - 1);
@@ -318,6 +620,8 @@ const setCurrentIndex = (index) => {
 };
 
 const startTimer = () => {
+  if (isCloudMirrorMode()) return;
+
   const sections = state.activeOutline?.sections || [];
   if (!sections.length) {
     setStatus("Load a session to start the timer.", "warning");
@@ -334,6 +638,7 @@ const startTimer = () => {
 };
 
 const pauseTimer = () => {
+  if (isCloudMirrorMode()) return;
   if (!state.running) return;
   state.running = false;
   if (tickId) {
@@ -349,6 +654,8 @@ const pauseTimer = () => {
 };
 
 const stopTimer = () => {
+  if (isCloudMirrorMode()) return;
+
   const sections = state.activeOutline?.sections || [];
   if (tickId) {
     clearInterval(tickId);
@@ -364,6 +671,17 @@ const stopTimer = () => {
 };
 
 const handleSectionComplete = () => {
+  if (isCloudMirrorMode()) {
+    state.running = false;
+    state.endTimeMs = null;
+    if (tickId) {
+      clearInterval(tickId);
+      tickId = null;
+    }
+    renderAll();
+    return;
+  }
+
   const sections = state.activeOutline?.sections || [];
   if (state.currentIndex < sections.length - 1) {
     state.currentIndex += 1;
@@ -468,64 +786,23 @@ const loadLocalCache = async () => {
   } else if (state.activeOutlineId) {
     setActiveOutline(state.activeOutlineId, true);
   }
-};
 
-const loadRemoteOutlines = async (user) => {
-  if (!user) return;
-  try {
-    setCloudStatus("Syncing...");
-    const userDoc = doc(db, "users", user.uid, "apps", "chess_planner_v2");
-    const snap = await getDoc(userDoc);
-    if (!snap.exists()) {
-      setCloudStatus("Cloud sync on");
-      setStatus("No cloud sessions found.", "warning");
-      return;
-    }
-
-    const data = snap.data() || {};
-    const outlines = [];
-
-    if (Array.isArray(data.currentSession) && data.currentSession.length) {
-      outlines.push({
-        id: "__current__",
-        title: "Current session",
-        sections: normalizeSections(data.currentSession)
-      });
-    }
-
-    if (Array.isArray(data.savedOutlines)) {
-      data.savedOutlines.forEach((outline, index) => {
-        outlines.push(normalizeOutline(outline, index));
-      });
-    }
-
-    state.outlines = outlines;
-    await storage.set({ savedOutlines: outlines });
-    renderSessionSelect();
-
-    if (!state.sessionStarted && !state.running) {
-      if (cachedTimerState) {
-        applyTimerState(cachedTimerState);
-      } else if (state.activeOutlineId) {
-        setActiveOutline(state.activeOutlineId, true);
-      }
-    }
-
-    setCloudStatus("Cloud sync on");
-  } catch (err) {
-    setCloudStatus("Cloud sync failed");
-    setStatus(err?.message || "Cloud sync failed.", "error");
+  const authSession = await readAuthSession();
+  if (!auth.currentUser && authSession?.accessToken) {
+    await restoreAuthFromSession(authSession);
   }
 };
 
 openLoginBtn.addEventListener("click", () => {
   const loginUrl = chrome?.runtime?.getURL ? chrome.runtime.getURL("login.html") : "login.html";
-  window.open(loginUrl, "_blank");
+  window.open(loginUrl, "skillflow-login", "popup=yes,width=460,height=640");
 });
 
 signOutBtn.addEventListener("click", async () => {
   try {
     await signOut(auth);
+    await clearIdentityTokens();
+    await clearAuthSession();
     setStatus("Signed out.", "success");
   } catch {
     setStatus("Sign out failed.", "error");
@@ -534,10 +811,12 @@ signOutBtn.addEventListener("click", async () => {
 
 refreshBtn.addEventListener("click", () => {
   if (!state.user) {
-    setStatus("Sign in to refresh from the cloud.", "warning");
+    loadLocalCache().catch(() => {});
+    setStatus("Reloaded the local cache.", "success");
     return;
   }
-  loadRemoteOutlines(state.user);
+  subscribeRemoteState(state.user);
+  setStatus("Reconnecting live sync...", "");
 });
 
 openSkillflowBtn.addEventListener("click", () => {
@@ -545,6 +824,7 @@ openSkillflowBtn.addEventListener("click", () => {
 });
 
 loadSessionBtn.addEventListener("click", () => {
+  if (isCloudMirrorMode()) return;
   const selectedId = sessionSelect.value;
   if (!selectedId) return;
   setActiveOutline(selectedId, true);
@@ -556,11 +836,45 @@ sessionSelect.addEventListener("change", () => {
 });
 
 sectionsList.addEventListener("click", (event) => {
+  if (isCloudMirrorMode()) return;
   const item = event.target.closest(".section-item");
   if (!item) return;
   const index = Number(item.dataset.index);
   if (Number.isNaN(index)) return;
   setCurrentIndex(index);
+});
+
+progressHost.addEventListener("click", (event) => {
+  if (isCloudMirrorMode()) return;
+  if (!state.totalSeconds) return;
+  const rect = progressHost.getBoundingClientRect();
+  if (!rect.width) return;
+  const ratio = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width));
+  setElapsedPosition(state.totalSeconds * ratio);
+});
+
+progressHost.addEventListener("keydown", (event) => {
+  if (isCloudMirrorMode()) return;
+  if (!state.totalSeconds) return;
+
+  const elapsed = getElapsedSeconds();
+  const step = event.shiftKey ? 300 : 60;
+  let nextElapsed = null;
+
+  if (event.key === "ArrowLeft") {
+    nextElapsed = elapsed - step;
+  } else if (event.key === "ArrowRight") {
+    nextElapsed = elapsed + step;
+  } else if (event.key === "Home") {
+    nextElapsed = 0;
+  } else if (event.key === "End") {
+    nextElapsed = state.totalSeconds;
+  }
+
+  if (nextElapsed === null) return;
+
+  event.preventDefault();
+  setElapsedPosition(nextElapsed);
 });
 
 startBtn.addEventListener("click", startTimer);
@@ -573,7 +887,31 @@ onAuthStateChanged(auth, (user) => {
   state.user = user || null;
   updateAccountUI(state.user);
   if (state.user) {
-    loadRemoteOutlines(state.user);
+    subscribeRemoteState(state.user);
+  } else {
+    clearRemoteSubscription();
+    renderAll();
+  }
+});
+
+chrome.storage.onChanged.addListener(async (changes, areaName) => {
+  if (areaName !== "local" || !changes[AUTH_SESSION_KEY]) return;
+
+  const nextSession = changes[AUTH_SESSION_KEY].newValue || null;
+  if (!nextSession) {
+    await signOut(auth).catch(() => {});
+    clearRemoteSubscription();
+    state.user = null;
+    updateAccountUI(null);
+    renderAll();
+    return;
+  }
+
+  if (!state.user || state.user.uid !== nextSession.uid) {
+    if (state.user && state.user.uid !== nextSession.uid) {
+      await signOut(auth).catch(() => {});
+    }
+    await restoreAuthFromSession(nextSession, { reportError: true });
   }
 });
 
