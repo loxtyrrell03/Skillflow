@@ -1674,6 +1674,16 @@ function currentSectionNotificationParts(){
   return sectionCompleteNotificationParts(currentSession[currentIndex] || {}, currentSession[currentIndex + 1] || null);
 }
 
+function notificationSetupHint(){
+  if(isIosPhoneLike() && !isStandaloneDisplayMode()){
+    return 'On iPhone, section alerts only work from the installed Home Screen app. In Safari, tap Share → Add to Home Screen, then open Skillflow from that icon and try again.';
+  }
+  if(isIosPhoneLike() && isStandaloneDisplayMode()){
+    return 'This iPhone does not appear to expose web notifications here. Web push for Home Screen web apps requires iOS 16.4 or later.';
+  }
+  return 'Notifications are not supported in this browser.';
+}
+
 function shouldShowInstallHint(){
   return isIosPhoneLike() && !isStandaloneDisplayMode() && !loadJSON(INSTALL_HINT_DISMISSED_KEY);
 }
@@ -1695,8 +1705,19 @@ function refreshPhoneNotificationCard(){
 
   const enabled = !!(prefs.notifyEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted');
   if(phoneEnableNotifBtn){
-    phoneEnableNotifBtn.textContent = enabled ? 'Section Alerts Enabled' : 'Enable Section Alerts';
-    phoneEnableNotifBtn.disabled = enabled;
+    if(enabled){
+      phoneEnableNotifBtn.textContent = 'Section Alerts Enabled';
+      phoneEnableNotifBtn.disabled = true;
+    }else if(isIosPhoneLike() && !isStandaloneDisplayMode()){
+      phoneEnableNotifBtn.textContent = 'Use Home Screen App';
+      phoneEnableNotifBtn.disabled = false;
+    }else if(isIosPhoneLike() && typeof Notification === 'undefined'){
+      phoneEnableNotifBtn.textContent = 'Requires iOS 16.4+';
+      phoneEnableNotifBtn.disabled = false;
+    }else{
+      phoneEnableNotifBtn.textContent = 'Enable Section Alerts';
+      phoneEnableNotifBtn.disabled = false;
+    }
   }
   if(phoneTestNotifBtn){
     phoneTestNotifBtn.classList.toggle('hidden', !enabled);
@@ -2688,7 +2709,10 @@ function updateProgress(){
 // Notifications helper
 function canNotify(){ return typeof Notification !== 'undefined'; }
 async function enableNotifications(){
-  if(!canNotify()) { showToast('Notifications not supported in this browser.','error'); return false; }
+  if(!canNotify()) {
+    showToast(notificationSetupHint(),'error', 6200);
+    return false;
+  }
   let perm = Notification.permission;
   if(perm === 'default'){
     try{ perm = await Notification.requestPermission(); }catch{ perm='denied'; }
@@ -4829,7 +4853,7 @@ async function refreshNotifUI(){
 
   if(notifDeviceHint){
     if(perm !== 'granted'){
-      notifDeviceHint.textContent = 'Allow notifications to get alerts when a section completes.';
+      notifDeviceHint.textContent = canNotify() ? 'Allow notifications to get alerts when a section completes.' : notificationSetupHint();
     }else if(!currentUser){
       notifDeviceHint.textContent = 'Foreground alerts work now. Sign in and open the installed iPhone app once to route section-end alerts to your phone.';
     }else if(pushSubscriptionState.subscribed){
