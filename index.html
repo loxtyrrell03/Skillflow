@@ -6,6 +6,12 @@
 
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#0ea5e9"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="default"/>
+<meta name="apple-mobile-web-app-title" content="Skillflow"/>
+<meta name="format-detection" content="telephone=no"/>
 
 <title>Skillflow — Structure your training. Master any skill.</title>
 
@@ -15,6 +21,8 @@
 
 <link rel="stylesheet" href="./styles.css?v=20260320b"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
+<link rel="manifest" href="./manifest.webmanifest"/>
+<link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
 
 <style id="index-overrides">
 
@@ -406,6 +414,27 @@ vertical-align: middle;
         <a href="#calendar" class="text-xs text-[var(--accent)] hover:underline">View Calendar →</a>
       </div>
       <div id="sessionScheduleList" class="flex flex-col gap-2"></div>
+    </section>
+
+    <section id="installHintCard" class="card install-card hidden">
+      <div class="install-copy">
+        <div class="install-kicker">iPhone setup</div>
+        <h3 class="block-title">Add Skillflow to your Home Screen for phone alerts</h3>
+        <p class="text-sm muted">On iPhone, use Share → Add to Home Screen, then open the installed app and enable notifications in Settings. Sign in on your phone once so section-end alerts can reach it.</p>
+      </div>
+      <button id="dismissInstallHintBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Hide</button>
+    </section>
+
+    <section id="phoneNotifyCard" class="card phone-notify-card hidden">
+      <div class="phone-notify-copy">
+        <div class="install-kicker">Phone alerts</div>
+        <h3 class="block-title">Get a notification when this section ends</h3>
+        <p id="phoneNotifyPreview" class="text-sm muted">Aimchess warmup complete! Next: Chessable tactics review.</p>
+      </div>
+      <div class="phone-notify-actions">
+        <button id="phoneEnableNotifBtn" class="sf-btn sf-btn-primary">Enable Section Alerts</button>
+        <button id="phoneTestNotifBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Send Test</button>
+      </div>
     </section>
 
     <!-- Controls -->
@@ -1097,6 +1126,7 @@ vertical-align: middle;
             <input id="toggleSectionAlerts" type="checkbox" />
             <span>Section completion alerts</span>
           </label>
+          <div id="notifDeviceHint" class="text-xs muted">Allow notifications to get alerts when a section completes.</div>
           <div class="flex items-center gap-2">
             <button id="sendTestNotifBtn" class="btn-xxs">Send test</button>
             <span id="notifHint" class="text-xs muted hidden">If denied, enable notifications in your browser settings.</span>
@@ -1487,6 +1517,11 @@ const navToggle = $('#navToggle');
 
 const topbar = $('#topbar');
 
+const PUSH_VAPID_PUBLIC_KEY = 'BLjuU7XyJtvTTlGvWUjHzQqmeNK_-MinIntoHl9yOJFUF0N6LBGDEyydUOWlKBAFmbyPGG6VrK-gbhVDBGCaZU8';
+const INSTALL_HINT_DISMISSED_KEY = 'ios_install_hint_dismissed_v1';
+let swRegistration = null;
+let pushSubscriptionState = { supported:false, available:false, subscribed:false, standalone:false };
+
 
 
 // Primary state
@@ -1541,6 +1576,10 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const functions = getFunctions(app, "us-central1");
 const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt: "select_account" });
+const savePushSubscriptionFn = httpsCallable(functions, 'savePushSubscription');
+const removePushSubscriptionFn = httpsCallable(functions, 'removePushSubscription');
+const syncSectionAlertFn = httpsCallable(functions, 'syncSectionAlert');
+const sendPushTestFn = httpsCallable(functions, 'sendPushTest');
 
 const cloudStatus = $('#cloudStatus');
 
@@ -1601,6 +1640,243 @@ const markDirty = ()=> { dirty = true; };
 const setLocalMode = (m='Local mode')=> cloudStatus.textContent = m;
 
   const setCloudMode = (m='Cloud sync on')=> cloudStatus.textContent = m;
+
+function isStandaloneDisplayMode(){
+  try{
+    return !!(window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true);
+  }catch{
+    return false;
+  }
+}
+
+function isIosPhoneLike(){
+  const ua = String(navigator.userAgent || navigator.vendor || '');
+  return /iPhone|iPod/i.test(ua);
+}
+
+function currentSessionTitle(){
+  const outlineId = timerState?.outlineId || null;
+  const saved = outlineId ? savedOutlines.find(o=>o.id === outlineId) : null;
+  return saved?.title || 'Skillflow session';
+}
+
+function sectionCompleteNotificationParts(section = {}, nextSection = null){
+  const currentName = String(section?.name || 'Current section').trim() || 'Current section';
+  const nextName = String(nextSection?.name || '').trim();
+  return {
+    title: `${currentName} complete!`,
+    body: nextName ? `Next: ${nextName}` : 'Session complete. Great work!',
+    preview: nextName ? `${currentName} complete! Next: ${nextName}` : `${currentName} complete! Session complete. Great work!`
+  };
+}
+
+function currentSectionNotificationParts(){
+  return sectionCompleteNotificationParts(currentSession[currentIndex] || {}, currentSession[currentIndex + 1] || null);
+}
+
+function shouldShowInstallHint(){
+  return isIosPhoneLike() && !isStandaloneDisplayMode() && !loadJSON(INSTALL_HINT_DISMISSED_KEY);
+}
+
+function applyInstallHintVisibility(){
+  const card = $('#installHintCard');
+  if(!card) return;
+  card.classList.toggle('hidden', !shouldShowInstallHint());
+}
+
+function refreshPhoneNotificationCard(){
+  if(!phoneNotifyCard) return;
+  const show = document.body.classList.contains('is-phone');
+  phoneNotifyCard.classList.toggle('hidden', !show);
+  if(!show) return;
+
+  const preview = currentSectionNotificationParts();
+  if(phoneNotifyPreview) phoneNotifyPreview.textContent = preview.preview;
+
+  const enabled = !!(prefs.notifyEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted');
+  if(phoneEnableNotifBtn){
+    phoneEnableNotifBtn.textContent = enabled ? 'Section Alerts Enabled' : 'Enable Section Alerts';
+    phoneEnableNotifBtn.disabled = enabled;
+  }
+  if(phoneTestNotifBtn){
+    phoneTestNotifBtn.classList.toggle('hidden', !enabled);
+  }
+}
+
+function urlBase64ToUint8Array(base64String){
+  const padding = '='.repeat((4 - (base64String.length % 4)) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for(let i=0; i<rawData.length; i++) outputArray[i] = rawData.charCodeAt(i);
+  return outputArray;
+}
+
+async function ensureServiceWorkerReady(){
+  if(!('serviceWorker' in navigator) || !window.isSecureContext) return null;
+  if(swRegistration) return swRegistration;
+  try{
+    const reg = await navigator.serviceWorker.register('./sw.js', { scope:'./', updateViaCache:'none' });
+    swRegistration = reg;
+    navigator.serviceWorker.addEventListener('controllerchange', ()=>{ swRegistration = null; });
+    const ready = await navigator.serviceWorker.ready;
+    swRegistration = ready;
+    return ready;
+  }catch(err){
+    console.warn('Service worker registration failed', err);
+    return null;
+  }
+}
+
+async function refreshPushSubscriptionState(){
+  const standalone = isStandaloneDisplayMode();
+  const supported = !!('serviceWorker' in navigator && 'PushManager' in window && window.isSecureContext);
+  pushSubscriptionState = { supported, available: supported && standalone, subscribed:false, standalone };
+  if(!supported) return null;
+  const reg = await ensureServiceWorkerReady();
+  if(!reg || !reg.pushManager) return null;
+  const sub = await reg.pushManager.getSubscription();
+  pushSubscriptionState = { supported, available: supported && standalone, subscribed:!!sub, standalone };
+  return sub;
+}
+
+async function saveCurrentPushSubscription(subscription){
+  if(!currentUser || !subscription) return false;
+  try{
+    const payload = subscription.toJSON ? subscription.toJSON() : subscription;
+    await savePushSubscriptionFn({
+      subscription: payload,
+      isStandalone: isStandaloneDisplayMode(),
+      platform: navigator.platform || '',
+      userAgent: navigator.userAgent || ''
+    });
+    return true;
+  }catch(err){
+    console.warn('Could not save push subscription', err);
+    return false;
+  }
+}
+
+async function removeCurrentPushSubscription(endpoint){
+  if(!currentUser || !endpoint) return;
+  try{ await removePushSubscriptionFn({ endpoint }); }catch(err){ console.warn('Could not remove push subscription', err); }
+}
+
+async function syncAccountPushSubscription(opts = {}){
+  const { toastOnMissingInstall = false, unsubscribe = false } = opts;
+  const reg = await ensureServiceWorkerReady();
+  const sub = await refreshPushSubscriptionState();
+
+  if(!reg || !reg.pushManager){
+    if(toastOnMissingInstall && isIosPhoneLike() && !isStandaloneDisplayMode()){
+      showToast('Add Skillflow to your Home Screen to unlock iPhone push alerts.','info', 5000);
+    }
+    return null;
+  }
+
+  if(unsubscribe || !prefs.notifyEnabled || Notification?.permission !== 'granted'){
+    if(sub){
+      const endpoint = sub.endpoint;
+      try{ await sub.unsubscribe(); }catch{}
+      await removeCurrentPushSubscription(endpoint);
+    }
+    await refreshPushSubscriptionState();
+    return null;
+  }
+
+  if(!currentUser){
+    return sub;
+  }
+
+  if(!isStandaloneDisplayMode()){
+    if(toastOnMissingInstall && isIosPhoneLike()){
+      showToast('Use the installed Home Screen app on iPhone to receive background section alerts.','info', 5000);
+    }
+    return sub;
+  }
+
+  let nextSub = sub;
+  if(!nextSub){
+    try{
+      nextSub = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(PUSH_VAPID_PUBLIC_KEY)
+      });
+    }catch(err){
+      console.warn('Push subscription failed', err);
+      if(toastOnMissingInstall){
+        showToast('Could not create a phone push subscription yet. Make sure the app is installed on your Home Screen and notifications are allowed.','error', 5200);
+      }
+      await refreshPushSubscriptionState();
+      return null;
+    }
+  }
+
+  if(nextSub) await saveCurrentPushSubscription(nextSub);
+  await refreshPushSubscriptionState();
+  return nextSub;
+}
+
+async function ensureBestNotificationChannel(opts = {}){
+  if(typeof Notification === 'undefined' || Notification.permission !== 'granted') return false;
+  await syncAccountPushSubscription(opts);
+  return true;
+}
+
+async function syncSectionAlertForCurrentState(){
+  if(!currentUser){
+    return;
+  }
+
+  if(!prefs.notifyEnabled || !sessionStarted || !running || awaitingNext || !currentSession[currentIndex] || secondsLeft <= 0){
+    try{ await syncSectionAlertFn({ enabled:false }); }catch(err){ console.warn('Could not cancel section alert', err); }
+    return;
+  }
+
+  const activeSection = currentSession[currentIndex] || {};
+  const nextSection = currentSession[currentIndex + 1] || null;
+  const sendAt = new Date(Date.now() + Math.max(0, secondsLeft * 1000)).toISOString();
+
+  try{
+    await syncSectionAlertFn({
+      enabled: true,
+      sendAt,
+      outlineId: timerState?.outlineId || '',
+      sectionId: activeSection.id || '',
+      sectionName: activeSection.name || `Section ${currentIndex + 1}`,
+      nextSectionName: nextSection?.name || '',
+      sectionIndex: currentIndex,
+      sectionCount: currentSession.length,
+      sessionTitle: currentSessionTitle()
+    });
+  }catch(err){
+    console.warn('Could not sync section alert', err);
+  }
+}
+
+const queueSectionAlertSync = debounce(()=>{ syncSectionAlertForCurrentState(); }, 260);
+
+async function sendPushTestNotification(){
+  if(typeof Notification === 'undefined' || Notification.permission !== 'granted'){
+    showToast('Allow notifications first.','error');
+    return;
+  }
+
+  await ensureBestNotificationChannel({ toastOnMissingInstall:true });
+  const preview = currentSectionNotificationParts();
+
+  if(currentUser){
+    try{
+      await sendPushTestFn({ title: preview.title, body: preview.body });
+      showToast('Sent a phone test notification.','success');
+      return;
+    }catch(err){
+      console.warn('Remote push test failed', err);
+    }
+  }
+
+  sendNotify(preview.title, preview.body);
+}
 
 
 async function saveCloudNow(){
@@ -2181,7 +2457,10 @@ function tick(){
   if(secondsLeft <= 0){
 
     if(currentIndex < currentSession.length - 1){
-      try{ const cur = currentSession[currentIndex]; sendNotify('Section complete', (cur?.name||'Next section ready')); }catch{}
+      try{
+        const notification = currentSectionNotificationParts();
+        sendNotify(notification.title, notification.body);
+      }catch{}
       stopTimer();
 
       awaitingNext = true;
@@ -2196,13 +2475,16 @@ function tick(){
 
     } else {
 
+      const completedSection = currentSession[currentIndex] || {};
+      const completionNotice = sectionCompleteNotificationParts(completedSection, null);
+
       stopTimer();
 
       tone();
 
       sessionStarted = false;
       updateStartBtnLabel();
-      try{ sendNotify('Session complete', 'Great work!'); }catch{}
+      try{ sendNotify(completionNotice.title, completionNotice.body); }catch{}
       markTimer();
 
       showToast('Session complete! 🎉','success', 3500);
@@ -2249,7 +2531,11 @@ function loop(){ if(!running) return; tick(); rafId = requestAnimationFrame(loop
 
 
 
-const markTimer = ()=>{ timerState={ sessionStarted,running,currentIndex,secondsLeft,outlineId: timerState?.outlineId || null,lastSyncTs:Date.now(), awaitingNext }; saveTimerLocal(); };
+const markTimer = ()=>{
+  timerState={ sessionStarted,running,currentIndex,secondsLeft,outlineId: timerState?.outlineId || null,lastSyncTs:Date.now(), awaitingNext };
+  saveTimerLocal();
+  queueSectionAlertSync();
+};
 
 
 
@@ -2408,11 +2694,35 @@ async function enableNotifications(){
     try{ perm = await Notification.requestPermission(); }catch{ perm='denied'; }
   }
   if(perm !== 'granted'){ showToast('Notifications denied. Enable in browser settings.','error'); return false; }
-  prefs.notifyEnabled = true; savePrefs(); updateNotifyBtn(); return true;
+  prefs.notifyEnabled = true; savePrefs(); updateNotifyBtn();
+  await ensureBestNotificationChannel({ toastOnMissingInstall:true });
+  queueSectionAlertSync();
+  refreshPhoneNotificationCard();
+  return true;
 }
-function disableNotifications(){ prefs.notifyEnabled=false; savePrefs(); updateNotifyBtn(); }
+function disableNotifications(){
+  prefs.notifyEnabled=false; savePrefs(); updateNotifyBtn();
+  syncAccountPushSubscription({ unsubscribe:true }).catch(()=>{});
+  queueSectionAlertSync();
+  refreshPhoneNotificationCard();
+}
 function updateNotifyBtn(){ /* legacy button removed */ }
-function sendNotify(title, body){ try{ if(prefs.notifyEnabled && canNotify() && Notification.permission==='granted'){ new Notification(title, { body, icon:'./logo2.png' }); } }catch{} }
+function sendNotify(title, body){
+  try{
+    if(!prefs.notifyEnabled || !canNotify() || Notification.permission!=='granted') return;
+    if(swRegistration && typeof swRegistration.showNotification === 'function'){
+      swRegistration.showNotification(title, {
+        body,
+        icon:'./icons/icon-192.png',
+        badge:'./icons/icon-192.png',
+        tag:`skillflow-inline-${Date.now()}`,
+        data:{ url:'/#home' }
+      }).catch(()=>{});
+      return;
+    }
+    new Notification(title, { body, icon:'./icons/icon-192.png' });
+  }catch{}
+}
 function updateFocusProgress(){
 
   if(!focusProgressFill || !focusProgressPctEl) return;
@@ -4362,7 +4672,11 @@ emailSignUpBtn.onclick = async ()=>{ try{ await createUserWithEmailAndPassword(a
 
 emailResetBtn.onclick = async ()=>{ try{ if(!emailInput.value.trim()) return showToast('Enter your email first.','error'); await sendPasswordResetEmail(auth, emailInput.value.trim()); showToast('Reset email sent.','success'); } catch(e){ showToast(e.message||'Reset failed','error'); } };
 
-signOutBtn.onclick = ()=> signOut(auth).catch(()=>{});
+signOutBtn.onclick = async ()=>{
+  try{ await syncSectionAlertFn({ enabled:false }); }catch{}
+  try{ await syncAccountPushSubscription({ unsubscribe:true }); }catch{}
+  signOut(auth).catch(()=>{});
+};
 
 
 onAuthStateChanged(auth, async (user)=>{
@@ -4420,10 +4734,13 @@ onAuthStateChanged(auth, async (user)=>{
     }catch{ setLocalMode('Cloud read failed'); if(prefs.focusDefault) showFocus(); }
 
     subscribeCloudTimer(user.uid);
+    ensureBestNotificationChannel().catch(()=>{});
+    queueSectionAlertSync();
 
   } else {
     clearCloudTimerSubscription();
     authOpenBtn.classList.remove('hidden'); userBadge.classList.add('hidden'); setLocalMode('Local mode');
+    refreshPushSubscriptionState().catch(()=>{});
     // Clear outlines and folders when signed out
     try{
       savedOutlines = [];
@@ -4438,6 +4755,7 @@ onAuthStateChanged(auth, async (user)=>{
     }catch{}
     // Wipe session data on sign-out
     wipeSessionData();
+    applyInstallHintVisibility();
     if(prefs.focusDefault) showFocus();
   }
 });
@@ -4450,7 +4768,12 @@ const setBg=$('#setBg'), setFg=$('#setFg'), setAccent=$('#setAccent'), setBorder
 const setShowShelf=$('#setShowShelf');
 const settingsSaveBtn=$('#settingsSaveBtn'), settingsResetBtn=$('#settingsResetBtn');
 const setVol=$('#setVol'), setTone=$('#setTone'), setToneDur=$('#setToneDur'), durLabel=$('#durLabel'), tonePreviewBtn=$('#tonePreviewBtn');
-const notifStatusPill=$('#notifStatusPill'); const toggleSectionAlerts=$('#toggleSectionAlerts'); const sendTestNotifBtn=$('#sendTestNotifBtn'); const notifHint=$('#notifHint');
+const notifStatusPill=$('#notifStatusPill'); const toggleSectionAlerts=$('#toggleSectionAlerts'); const sendTestNotifBtn=$('#sendTestNotifBtn'); const notifHint=$('#notifHint'); const notifDeviceHint=$('#notifDeviceHint');
+const dismissInstallHintBtn = $('#dismissInstallHintBtn');
+const phoneNotifyCard = $('#phoneNotifyCard');
+const phoneNotifyPreview = $('#phoneNotifyPreview');
+const phoneEnableNotifBtn = $('#phoneEnableNotifBtn');
+const phoneTestNotifBtn = $('#phoneTestNotifBtn');
 
 
 function applyTheme(t){
@@ -4471,6 +4794,56 @@ function applyTheme(t){
 
 }
 
+async function refreshNotifUI(){
+  const perm = (typeof Notification==='undefined') ? 'unsupported' : Notification.permission;
+  await refreshPushSubscriptionState();
+
+  if(notifStatusPill){
+    let txt='Not asked';
+    let cls='border';
+    if(perm==='granted' && pushSubscriptionState.subscribed){
+      txt='Phone ready';
+      cls='bg-[var(--accent-100)] border-[var(--accent)]';
+    }else if(perm==='granted'){
+      txt='In app only';
+      cls='bg-[var(--panel-muted)] border-[var(--border)]';
+    }else if(perm==='denied'){
+      txt='Denied';
+      cls='border border-rose-400';
+    }else if(perm==='unsupported'){
+      txt='Unsupported';
+      cls='border';
+    }
+    notifStatusPill.textContent = txt;
+    notifStatusPill.className = `px-2 py-1 text-xs rounded-full ${cls}`;
+  }
+
+  if(toggleSectionAlerts){
+    toggleSectionAlerts.checked = !!prefs.notifyEnabled;
+    toggleSectionAlerts.disabled = (perm === 'unsupported');
+  }
+
+  if(notifHint){
+    notifHint.classList.toggle('hidden', !(perm==='denied'));
+  }
+
+  if(notifDeviceHint){
+    if(perm !== 'granted'){
+      notifDeviceHint.textContent = 'Allow notifications to get alerts when a section completes.';
+    }else if(!currentUser){
+      notifDeviceHint.textContent = 'Foreground alerts work now. Sign in and open the installed iPhone app once to route section-end alerts to your phone.';
+    }else if(pushSubscriptionState.subscribed){
+      notifDeviceHint.textContent = 'This account is linked to a phone-ready Skillflow app. Section-end alerts will be pushed there while you practice.';
+    }else if(isIosPhoneLike() && !isStandaloneDisplayMode()){
+      notifDeviceHint.textContent = 'Use Share → Add to Home Screen, open the installed app, and enable notifications there for background iPhone alerts.';
+    }else{
+      notifDeviceHint.textContent = 'Foreground alerts are active. To receive background phone alerts, sign in on the installed Home Screen app on your iPhone once.';
+    }
+  }
+
+  refreshPhoneNotificationCard();
+}
+
 function openSettings(){
 
   setBg.value = prefs.theme?.bg || '#ffffff';
@@ -4488,39 +4861,7 @@ function openSettings(){
 
 
   setVol.value = String(prefs.audio?.volume ?? 0.5);
-  // Notifications UI
-  function refreshNotifUI(){
-    const perm = (typeof Notification==='undefined') ? 'unsupported' : Notification.permission;
-    if(notifStatusPill){
-      let txt='Not asked'; let cls='border';
-      if(perm==='granted'){ txt='Allowed'; cls='bg-[var(--accent-100)] border-[var(--accent)]'; }
-      else if(perm==='denied'){ txt='Denied'; cls='border border-rose-400'; }
-      else if(perm==='unsupported'){ txt='Unsupported'; cls='border'; }
-      notifStatusPill.textContent = txt; notifStatusPill.className = `px-2 py-1 text-xs rounded-full ${cls}`;
-    }
-    if(toggleSectionAlerts){
-      const enabled = !!prefs.notifyEnabled;
-      toggleSectionAlerts.checked = enabled;
-      const can = (perm==='granted');
-      toggleSectionAlerts.disabled = !can;
-    }
-    if(notifHint){ notifHint.classList.toggle('hidden', !(perm==='denied')); }
-  }
   refreshNotifUI();
-  if(toggleSectionAlerts){
-    toggleSectionAlerts.addEventListener('change', async ()=>{
-      if(toggleSectionAlerts.checked){
-        if(typeof Notification==='undefined'){ showToast('Notifications unsupported','error'); toggleSectionAlerts.checked=false; return; }
-        if(Notification.permission!=='granted'){
-          const perm = await Notification.requestPermission();
-          if(perm!=='granted'){ toggleSectionAlerts.checked=false; refreshNotifUI(); return; }
-        }
-        prefs.notifyEnabled = true; savePrefs();
-      } else { prefs.notifyEnabled=false; savePrefs(); }
-      refreshNotifUI();
-    });
-  }
-  if(sendTestNotifBtn){ sendTestNotifBtn.addEventListener('click', ()=>{ if(Notification?.permission==='granted'){ sendNotify('Test notification','You will receive alerts when a section completes.'); } else { showToast('Allow notifications first.','error'); } }); }
   setTone.value = String(prefs.audio?.tone || 'beep');
 
   setToneDur.value = String(prefs.audio?.duration ?? 0.6);
@@ -4540,6 +4881,40 @@ document.querySelectorAll('#settingsModal [data-close="1"]').forEach(b=> b.addEv
 settingsModal.addEventListener('click', (e)=>{ if(e.target.dataset.close==='1') closeSettings(); });
 
 $('#settingsBtn').onclick = openSettings;
+dismissInstallHintBtn && dismissInstallHintBtn.addEventListener('click', ()=>{
+  saveJSON(INSTALL_HINT_DISMISSED_KEY, true);
+  applyInstallHintVisibility();
+});
+
+if(toggleSectionAlerts){
+  toggleSectionAlerts.addEventListener('change', async ()=>{
+    if(toggleSectionAlerts.checked){
+      const ok = await enableNotifications();
+      if(!ok) toggleSectionAlerts.checked = false;
+    }else{
+      disableNotifications();
+    }
+    refreshNotifUI();
+  });
+}
+
+if(sendTestNotifBtn){
+  sendTestNotifBtn.addEventListener('click', ()=>{ sendPushTestNotification(); });
+}
+
+if(phoneEnableNotifBtn){
+  phoneEnableNotifBtn.addEventListener('click', async ()=>{
+    const ok = await enableNotifications();
+    if(ok){
+      refreshNotifUI();
+      showToast('Section alerts are on for this phone.','success');
+    }
+  });
+}
+
+if(phoneTestNotifBtn){
+  phoneTestNotifBtn.addEventListener('click', ()=>{ sendPushTestNotification(); });
+}
 
 
 
@@ -5476,7 +5851,7 @@ function renderCurrent(){ const s=currentSession[currentIndex];
 
 }
 
-function renderAll(){ renderOutline(); buildProgress(); updateProgress(); renderCurrent(); syncProgressPopout(); }
+function renderAll(){ renderOutline(); buildProgress(); updateProgress(); renderCurrent(); refreshPhoneNotificationCard(); syncProgressPopout(); }
 
 
 
@@ -5765,6 +6140,35 @@ function renderFoldersUI(){
 // Expose for Saved Outlines module to query current folder
 
 window.__getCurrentFolderId = ()=>{ ensureCurrentFolderId(); return currentFolderId; };
+window.refreshPhoneNotificationCard = refreshPhoneNotificationCard;
+
+applyInstallHintVisibility();
+ensureServiceWorkerReady().then(async ()=>{
+  await refreshPushSubscriptionState();
+  if(prefs.notifyEnabled && Notification?.permission === 'granted'){
+    ensureBestNotificationChannel().catch(()=>{});
+  }
+}).catch(()=>{});
+
+window.addEventListener('focus', ()=>{
+  applyInstallHintVisibility();
+  refreshPushSubscriptionState().then(()=> refreshNotifUI()).catch(()=>{});
+});
+
+try{
+  const displayModeQuery = window.matchMedia('(display-mode: standalone)');
+  const handleDisplayModeChange = ()=>{
+    applyInstallHintVisibility();
+    refreshPushSubscriptionState().then(()=>{
+      refreshNotifUI();
+      if(prefs.notifyEnabled && Notification?.permission === 'granted'){
+        ensureBestNotificationChannel().catch(()=>{});
+      }
+    }).catch(()=>{});
+  };
+  if(typeof displayModeQuery.addEventListener === 'function') displayModeQuery.addEventListener('change', handleDisplayModeChange);
+  else if(typeof displayModeQuery.addListener === 'function') displayModeQuery.addListener(handleDisplayModeChange);
+}catch{}
 
 renderFoldersUI();
 
@@ -5845,6 +6249,7 @@ renderFoldersUI();
       const phone = isPhone();
 
       document.body.classList.toggle('is-phone', phone);
+      try{ if(window.refreshPhoneNotificationCard) window.refreshPhoneNotificationCard(); }catch{}
 
       return phone;
 
