@@ -21,7 +21,7 @@
 
 <link rel="stylesheet" href="./styles.css?v=20260320b"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
-<link rel="manifest" href="./manifest.webmanifest"/>
+<link rel="manifest" href="./manifest.webmanifest?v=20260320d"/>
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
 
 <style id="index-overrides">
@@ -2740,7 +2740,7 @@ function sendNotify(title, body){
         icon:'./icons/icon-192.png',
         badge:'./icons/icon-192.png',
         tag:`skillflow-inline-${Date.now()}`,
-        data:{ url:'/#home' }
+        data:{ url:'./#home' }
       }).catch(()=>{});
       return;
     }

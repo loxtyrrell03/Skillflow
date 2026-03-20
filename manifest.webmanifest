@@ -1,10 +1,10 @@
 {
-  "id": "/",
+  "id": "./",
   "name": "Skillflow",
   "short_name": "Skillflow",
   "description": "Structure focused practice sessions with timed sections, saved outlines, and section-end alerts.",
-  "start_url": "/#home",
-  "scope": "/",
+  "start_url": "./#home",
+  "scope": "./",
   "display": "standalone",
   "display_override": [
     "standalone",
@@ -20,23 +20,23 @@
   "prefer_related_applications": false,
   "icons": [
     {
-      "src": "/icons/icon-192.png",
+      "src": "./icons/icon-192.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-512.png",
+      "src": "./icons/icon-512.png",
       "sizes": "512x512",
       "type": "image/png"
     },
     {
-      "src": "/icons/icon-maskable-512.png",
+      "src": "./icons/icon-maskable-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "maskable"
     },
     {
-      "src": "/icons/apple-touch-icon.png",
+      "src": "./icons/apple-touch-icon.png",
       "sizes": "180x180",
       "type": "image/png"
     }

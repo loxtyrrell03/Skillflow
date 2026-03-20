@@ -77,11 +77,11 @@ function buildSectionPayload(data) {
   return {
     title,
     body,
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+    icon: "./icons/icon-192.png",
+    badge: "./icons/icon-192.png",
     tag: `skillflow-section-${data.uid || "session"}`,
     data: {
-      url: "/#home",
+      url: "./#home",
       type: "section-complete",
       sectionName,
       nextSectionName,
@@ -341,11 +341,11 @@ exports.sendPushTest = onCall({ region: REGION, secrets: [WEB_PUSH_PRIVATE_KEY] 
   const payload = {
     title,
     body,
-    icon: "/icons/icon-192.png",
-    badge: "/icons/icon-192.png",
+    icon: "./icons/icon-192.png",
+    badge: "./icons/icon-192.png",
     tag: `skillflow-test-${Date.now()}`,
     data: {
-      url: "/#home",
+      url: "./#home",
       type: "push-test"
     }
   };
