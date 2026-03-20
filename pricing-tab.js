@@ -36,7 +36,7 @@
       '      <li><strong>File upload</strong> for quick reference</li>',
       '    </ul>',
       '    <div class="pricing-cta">',
-      '      <button class="px-4 py-2 rounded-xl bg-sky-600 text-white" disabled>Upgrade — coming soon</button>',
+'      <button class="sf-btn sf-btn-primary" disabled>Upgrade - coming soon</button>',
       '    </div>',
       '  </div>',
       '</div>'

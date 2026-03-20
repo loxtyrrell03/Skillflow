@@ -1,7 +1,7 @@
 import { auth, db } from "./firebase.js";
 import { AUTH_SESSION_KEY, clearAuthSession, readAuthSession } from "./auth-session.js";
 import { GoogleAuthProvider, onAuthStateChanged, signInWithCredential, signOut } from "./vendor/firebase-auth.js";
-import { doc, onSnapshot } from "./vendor/firebase-firestore.js";
+import { doc, onSnapshot, serverTimestamp, setDoc } from "./vendor/firebase-firestore.js";
 
 const statusEl = document.getElementById("status");
 const cloudStatusEl = document.getElementById("cloudStatus");
@@ -51,7 +51,8 @@ const state = {
   sessionStarted: false,
   awaitingNext: false,
   endTimeMs: null,
-  totalSeconds: 0
+  totalSeconds: 0,
+  timerOutlineId: null
 };
 
 let cachedTimerState = null;
@@ -175,8 +176,106 @@ const buildRemoteOutlines = (data) => {
   return outlines;
 };
 
+const resolveElapsedPosition = (targetElapsed) => {
+  const sections = state.activeOutline?.sections || [];
+  if (!sections.length || !state.totalSeconds) return null;
+
+  const clampedElapsed = Math.max(0, Math.min(Math.round(targetElapsed), state.totalSeconds));
+
+  if (clampedElapsed >= state.totalSeconds) {
+    return {
+      currentIndex: sections.length - 1,
+      secondsLeft: 0,
+      sessionStarted: true,
+      running: false,
+      awaitingNext: false
+    };
+  }
+
+  let traversed = 0;
+  for (let index = 0; index < sections.length; index += 1) {
+    const sectionSeconds = getSectionSeconds(sections[index]);
+    const sectionEnd = traversed + sectionSeconds;
+
+    if (clampedElapsed < sectionEnd || index === sections.length - 1) {
+      const elapsedInSection = Math.max(0, clampedElapsed - traversed);
+      const secondsLeft = Math.max(0, sectionSeconds - elapsedInSection);
+      return {
+        currentIndex: index,
+        secondsLeft,
+        sessionStarted: clampedElapsed > 0,
+        running: state.running && secondsLeft > 0,
+        awaitingNext: false
+      };
+    }
+
+    traversed = sectionEnd;
+  }
+
+  return null;
+};
+
+const applyResolvedPosition = (nextState, { persist = true } = {}) => {
+  if (!nextState) return;
+
+  state.currentIndex = nextState.currentIndex;
+  state.secondsLeft = nextState.secondsLeft;
+  state.sessionStarted = nextState.sessionStarted;
+  state.awaitingNext = nextState.awaitingNext;
+  state.running = nextState.running;
+
+  if (tickId) {
+    clearInterval(tickId);
+    tickId = null;
+  }
+
+  if (state.running) {
+    state.endTimeMs = Date.now() + state.secondsLeft * 1000;
+    tickId = setInterval(tick, 250);
+  } else {
+    state.endTimeMs = null;
+  }
+
+  renderAll();
+  if (persist) saveTimerState();
+};
+
+const pushRemoteTimerState = async (nextState) => {
+  if (!state.user || !nextState) return;
+
+  const outlineId =
+    state.timerOutlineId ||
+    (state.activeOutline?.id && state.activeOutline.id !== "__current__" ? state.activeOutline.id : null);
+
+  setCloudStatus("Syncing...");
+
+  try {
+    await setDoc(
+      userDocRef(state.user.uid),
+      {
+        timer: {
+          currentIndex: nextState.currentIndex,
+          secondsLeft: nextState.secondsLeft,
+          running: nextState.running,
+          sessionStarted: nextState.sessionStarted,
+          awaitingNext: nextState.awaitingNext,
+          outlineId,
+          lastSyncTs: Date.now()
+        },
+        updatedAt: serverTimestamp()
+      },
+      { merge: true }
+    );
+    setStatus("", "");
+  } catch (error) {
+    setCloudStatus("Cloud sync failed");
+    setStatus(error?.message || "Couldn't sync the new timer position to Skillflow.", "error");
+  }
+};
+
 const applySharedTimerState = (sharedTimer) => {
   const sections = state.activeOutline?.sections || [];
+  state.timerOutlineId = sharedTimer?.outlineId || state.timerOutlineId || null;
   if (!sections.length) {
     state.currentIndex = 0;
     state.secondsLeft = 0;
@@ -241,6 +340,7 @@ const applySharedTimerState = (sharedTimer) => {
 const applyRemoteSnapshot = async (data) => {
   const outlines = buildRemoteOutlines(data);
   state.outlines = outlines;
+  state.timerOutlineId = data?.timer?.outlineId || null;
   await storage.set({ savedOutlines: outlines });
   renderSessionSelect();
 
@@ -288,6 +388,7 @@ const subscribeRemoteState = (user) => {
         state.outlines = [];
         state.activeOutline = null;
         state.activeOutlineId = null;
+        state.timerOutlineId = null;
         state.currentIndex = 0;
         state.secondsLeft = 0;
         state.running = false;
@@ -367,6 +468,7 @@ const renderSessionSelect = () => {
     state.sessionStarted = false;
     state.awaitingNext = false;
     state.endTimeMs = null;
+    state.timerOutlineId = null;
     if (tickId) {
       clearInterval(tickId);
       tickId = null;
@@ -451,48 +553,15 @@ const getElapsedSeconds = () => {
 };
 
 const setElapsedPosition = (targetElapsed) => {
-  if (isCloudMirrorMode()) return;
+  const nextState = resolveElapsedPosition(targetElapsed);
+  if (!nextState) return;
 
-  const sections = state.activeOutline?.sections || [];
-  if (!sections.length || !state.totalSeconds) return;
-
-  const clampedElapsed = Math.max(0, Math.min(Math.round(targetElapsed), state.totalSeconds));
-
-  if (clampedElapsed >= state.totalSeconds) {
-    state.currentIndex = sections.length - 1;
-    state.secondsLeft = 0;
-    state.sessionStarted = true;
-    state.running = false;
-    state.endTimeMs = null;
-    if (tickId) {
-      clearInterval(tickId);
-      tickId = null;
-    }
-    renderAll();
-    saveTimerState();
+  if (isCloudMirrorMode()) {
+    pushRemoteTimerState(nextState);
     return;
   }
 
-  let traversed = 0;
-  for (let index = 0; index < sections.length; index += 1) {
-    const sectionSeconds = getSectionSeconds(sections[index]);
-    const sectionEnd = traversed + sectionSeconds;
-
-    if (clampedElapsed < sectionEnd || index === sections.length - 1) {
-      const elapsedInSection = Math.max(0, clampedElapsed - traversed);
-      state.currentIndex = index;
-      state.secondsLeft = Math.max(0, sectionSeconds - elapsedInSection);
-      state.sessionStarted = clampedElapsed > 0;
-      if (state.running) {
-        state.endTimeMs = Date.now() + state.secondsLeft * 1000;
-      }
-      renderAll();
-      saveTimerState();
-      return;
-    }
-
-    traversed = sectionEnd;
-  }
+  applyResolvedPosition(nextState);
 };
 
 const renderTimer = () => {
@@ -552,7 +621,7 @@ const updateControls = () => {
   startBtn.classList.toggle("hidden", state.running && !mirrorMode);
   pauseBtn.classList.toggle("hidden", !state.running || mirrorMode);
   if (progressHost) {
-    progressHost.setAttribute("aria-disabled", hasSession && !mirrorMode ? "false" : "true");
+    progressHost.setAttribute("aria-disabled", hasSession ? "false" : "true");
   }
   if (progressCaption) {
     if (mirrorMode && !hasSession) {
@@ -560,7 +629,7 @@ const updateControls = () => {
     } else if (!hasSession) {
       progressCaption.textContent = "Load a session to start focusing.";
     } else if (mirrorMode) {
-      progressCaption.textContent = "Live sync from Skillflow. Use the website or pop-out mini-window to control the timer.";
+      progressCaption.textContent = "Live sync from Skillflow. Click the bar to jump sections, and the website will follow.";
     } else {
       progressCaption.textContent = "Click the bar to jump within the session.";
     }
@@ -581,6 +650,7 @@ const setActiveOutline = (outlineId, resetTimer = true) => {
 
   state.activeOutline = outline;
   state.activeOutlineId = outline.id;
+  state.timerOutlineId = outline.id;
   state.totalSeconds = calcTotalSeconds(outline.sections);
   if (sessionSelect.value !== outline.id) {
     sessionSelect.value = outline.id;
@@ -719,7 +789,9 @@ const tick = () => {
 
 const saveTimerState = () => {
   const timerState = {
-    outlineId: state.activeOutline?.id || null,
+    outlineId:
+      state.timerOutlineId ||
+      (state.activeOutline?.id && state.activeOutline.id !== "__current__" ? state.activeOutline.id : null),
     currentIndex: state.currentIndex,
     secondsLeft: state.secondsLeft,
     running: state.running,
@@ -741,6 +813,7 @@ const applyTimerState = (timerState) => {
 
   state.activeOutline = outline;
   state.activeOutlineId = outline.id;
+  state.timerOutlineId = timerState.outlineId || outline.id || null;
   state.totalSeconds = calcTotalSeconds(outline.sections);
   if (sessionSelect.value !== outline.id) {
     sessionSelect.value = outline.id;
@@ -845,7 +918,6 @@ sectionsList.addEventListener("click", (event) => {
 });
 
 progressHost.addEventListener("click", (event) => {
-  if (isCloudMirrorMode()) return;
   if (!state.totalSeconds) return;
   const rect = progressHost.getBoundingClientRect();
   if (!rect.width) return;
@@ -854,7 +926,6 @@ progressHost.addEventListener("click", (event) => {
 });
 
 progressHost.addEventListener("keydown", (event) => {
-  if (isCloudMirrorMode()) return;
   if (!state.totalSeconds) return;
 
   const elapsed = getElapsedSeconds();

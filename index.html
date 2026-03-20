@@ -122,7 +122,7 @@ vertical-align: middle;
 
 
 
-<body class="min-h-screen">
+<body class="min-h-screen sf-site">
 
 <!-- ======= TOP BAR ======= -->
 
@@ -173,17 +173,17 @@ vertical-align: middle;
 
   <div class="topbar-actions">
 
-    <button id="settingsBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]" title="Customize UI">⚙️ Settings</button>
+    <button id="settingsBtn" class="sf-btn sf-btn-ghost sf-btn-compact" title="Customize UI">⚙️ Settings</button>
 
     <div id="authArea" class="flex items-center gap-2">
 
-      <button id="authOpenBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Sign in / Sign up</button>
+      <button id="authOpenBtn" class="sf-btn sf-btn-secondary sf-btn-compact">Sign in / Sign up</button>
 
       <div id="userBadge" class="hidden items-center gap-2">
 
         <span id="userEmail" class="text-sm muted"></span>
 
-        <button id="signOutBtn" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white">Sign out</button>
+        <button id="signOutBtn" class="sf-btn sf-btn-danger sf-btn-compact">Sign out</button>
 
       </div>
 
@@ -205,13 +205,13 @@ vertical-align: middle;
 
 <!-- ======= MAIN WRAPPER ======= -->
 
-<div class="max-w-7xl mx-auto px-5 py-6">
+<div class="app-shell max-w-7xl mx-auto px-5 py-6">
 
 
 
   <!-- ======= OVERVIEW / LANDING ======= -->
 
-  <section id="overviewTab">
+  <section id="overviewTab" class="page-shell">
 
     <div class="landing-hero card aurora-frame reveal">
 
@@ -223,9 +223,9 @@ vertical-align: middle;
 
         <div class="hero-cta">
 
-          <button class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white shadow-sm" data-tab-jump="homeTab">start session</button>
+          <button class="sf-btn sf-btn-primary" data-tab-jump="homeTab">start session</button>
 
-          <button id="learnBasicsBtn" class="px-4 py-2 rounded-xl border border-[var(--border)]">Learn the basics ▶</button>
+          <button id="learnBasicsBtn" class="sf-btn sf-btn-ghost">Learn the basics ▶</button>
 
         </div>
 
@@ -370,11 +370,11 @@ vertical-align: middle;
 
   <!-- ======= PLANNER ======= -->
 
-  <section id="homeTab" class="hidden">
+  <section id="homeTab" class="hidden page-shell">
 
     <!-- Progress -->
 
-    <section class="mb-4">
+    <section class="mb-4 planner-progress-shell">
 
       <div class="flex items-center justify-between mb-1">
         <div id="progressLabel" class="block-sub">Progress - click to jump</div>
@@ -400,7 +400,7 @@ vertical-align: middle;
     </section>
 
     <!-- Today's Schedule -->
-    <section id="sessionTodaySchedule" class="mb-4 card p-4" style="display:none">
+    <section id="sessionTodaySchedule" class="mb-4 card planner-subsurface p-4" style="display:none">
       <div class="flex items-center justify-between mb-2">
         <h3 class="block-title">Today's Schedule</h3>
         <a href="#calendar" class="text-xs text-[var(--accent)] hover:underline">View Calendar →</a>
@@ -410,25 +410,25 @@ vertical-align: middle;
 
     <!-- Controls -->
 
-    <section class="flex flex-wrap items-center gap-3 mb-3">
+    <section class="planner-control-row flex flex-wrap items-center gap-3 mb-3">
 
-      <button id="startBtn" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white shadow-sm">Start Study Session</button>
+      <button id="startBtn" class="sf-btn sf-btn-primary">Start Study Session</button>
 
-      <button id="readyNextBtn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm hidden">I’m ready — start next ▶</button>
+      <button id="readyNextBtn" class="sf-btn sf-btn-secondary hidden">I’m ready — start next ▶</button>
 
-      <button id="prevBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">◀ Prev</button>
+      <button id="prevBtn" class="sf-btn sf-btn-ghost sf-btn-compact">◀ Prev</button>
 
-      <button id="nextBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Next ▶</button>
+      <button id="nextBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Next ▶</button>
 
-      <button id="focusModeBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Focus Mode</button>
-      <button id="popoutProgressBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Pop out</button>
+      <button id="focusModeBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Focus Mode</button>
+      <button id="popoutProgressBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Pop out</button>
       <!-- MOVED: clock now lives next to Focus Mode -->
 
       <div id="clock" class="clock-badge text-2xl tabular-nums">00:00</div>
 
-      <button id="resetBtn" class="ml-auto px-3 py-2 rounded-xl border border-[var(--border)]">Reset</button>
+      <button id="resetBtn" class="sf-btn sf-btn-ghost sf-btn-compact ml-auto">Reset</button>
 
-      <button id="showOutlineBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] hidden">Show Outline ▸</button>
+      <button id="showOutlineBtn" class="sf-btn sf-btn-ghost sf-btn-compact hidden">Show Outline ▸</button>
 
     </section>
 
@@ -474,7 +474,7 @@ vertical-align: middle;
 
               <!-- Label simplified to “Save” when editing (see JS) -->
 
-              <button id="editSectionBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Edit Section</button>
+          <button id="editSectionBtn" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Edit Section</button>
 
             </div>
 
@@ -552,7 +552,7 @@ vertical-align: middle;
 
       <aside id="rightPane">
 
-        <div class="card p-4 h-full flex flex-col">
+        <div class="card outline-panel p-4 h-full flex flex-col">
 
           <div id="homeSavedRow" class="mb-3">
 
@@ -580,7 +580,7 @@ vertical-align: middle;
 
             <h3 class="block-title">Session outline</h3>
 
-            <button id="collapseOutlineBtn" class="text-xs px-2 py-1 rounded-md border border-[var(--border)]">▾ Hide</button>
+            <button id="collapseOutlineBtn" class="sf-btn sf-btn-ghost sf-btn-compact text-xs">▾ Hide</button>
 
           </div>
 
@@ -612,7 +612,7 @@ vertical-align: middle;
 
           <div class="mt-3 flex items-center gap-2">
 
-            <button id="addOutlineItem" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">+ Add Section</button>
+            <button id="addOutlineItem" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">+ Add Section</button>
 
             <div id="totalMins" class="ml-auto text-xs muted">Total: 0 minutes</div>
 
@@ -638,7 +638,7 @@ vertical-align: middle;
 
   <!-- ======= SAVED OUTLINES ======= -->
 
-  <section id="savedTab" class="hidden saved-workspace">
+  <section id="savedTab" class="hidden page-shell saved-workspace">
 
     <div class="card saved-toolbar">
       <div class="saved-toolbar-copy">
@@ -716,7 +716,7 @@ vertical-align: middle;
 
 
   <!-- ======= CALENDAR TAB ======= -->
-  <section id="calendarTab" class="hidden">
+  <section id="calendarTab" class="hidden page-shell">
 
     <div class="calendar-layout">
 
@@ -750,14 +750,14 @@ vertical-align: middle;
         <div class="card p-4 mb-4">
           <div class="flex items-center justify-between flex-wrap gap-3">
             <div class="flex items-center gap-3">
-              <button id="calPrevMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">←</button>
+              <button id="calPrevMonth" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">←</button>
               <h2 id="calMonthYear" class="block-title text-lg">December 2025</h2>
-              <button id="calNextMonth" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">→</button>
-              <button id="calToday" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm hover:bg-[var(--accent-100)]">Today</button>
+              <button id="calNextMonth" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">→</button>
+              <button id="calToday" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Today</button>
             </div>
             <div class="flex items-center gap-2">
-              <button id="calViewWeek" class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm">Week</button>
-              <button id="calViewMonth" class="px-3 py-2 rounded-xl bg-[var(--accent)] text-white text-sm">Month</button>
+              <button id="calViewWeek" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Week</button>
+              <button id="calViewMonth" class="sf-btn sf-btn-primary sf-btn-compact text-sm">Month</button>
             </div>
           </div>
         </div>
@@ -797,7 +797,7 @@ vertical-align: middle;
 
   <!-- ======= HOW TO ======= -->
 
-  <section id="helpTab" class="hidden">
+  <section id="helpTab" class="hidden page-shell">
 
     <div class="card p-5 space-y-6">
 
@@ -877,7 +877,7 @@ vertical-align: middle;
 
   <!-- ======= PRICING ======= -->
 
-  <section id="pricingTab" class="hidden">
+  <section id="pricingTab" class="hidden page-shell">
 
     <div id="pricingMount"></div>
 
@@ -897,7 +897,7 @@ vertical-align: middle;
 
     <!-- Centered card wrapper (includes Exit button) -->
 
-    <div class="card w-full max-w-3xl p-5">
+    <div class="card focus-shell w-full max-w-3xl p-5">
 
       <div class="flex items-start justify-between gap-3">
 
@@ -909,7 +909,7 @@ vertical-align: middle;
 
         </div>
 
-        <button id="focusExitBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] shrink-0">Exit Focus ✕</button>
+        <button id="focusExitBtn" class="sf-btn sf-btn-ghost sf-btn-compact shrink-0">Exit Focus ✕</button>
 
       </div>
 
@@ -920,10 +920,10 @@ vertical-align: middle;
 
         <!-- Focus controls: mirror main controls (Start/Ready/Prev/Next) -->
         <div class="flex flex-wrap items-center justify-center gap-2">
-          <button id="focusStartBtn" class="px-4 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white shadow-sm">Start Study Session</button>
-          <button id="focusReadyNextBtn" class="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm hidden">I’m ready — start next ▶</button>
-          <button id="focusPrevBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">◀ Prev</button>
-          <button id="focusNextBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Next ▶</button>
+          <button id="focusStartBtn" class="sf-btn sf-btn-primary">Start Study Session</button>
+          <button id="focusReadyNextBtn" class="sf-btn sf-btn-secondary hidden">I’m ready — start next ▶</button>
+          <button id="focusPrevBtn" class="sf-btn sf-btn-ghost sf-btn-compact">◀ Prev</button>
+          <button id="focusNextBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Next ▶</button>
         </div>
 
 
@@ -1104,13 +1104,13 @@ vertical-align: middle;
 
     <div class="mt-4 flex items-center justify-between">
 
-      <button id="settingsResetBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Reset defaults</button>
+      <button id="settingsResetBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Reset defaults</button>
 
       <div class="flex items-center gap-2">
 
-        <button class="px-3 py-2 rounded-xl border border-[var(--border)]" data-close="1">Close</button>
+        <button class="sf-btn sf-btn-ghost sf-btn-compact" data-close="1">Close</button>
 
-        <button id="settingsSaveBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Save</button>
+        <button id="settingsSaveBtn" class="sf-btn sf-btn-secondary sf-btn-compact">Save</button>
 
       </div>
 
@@ -1142,10 +1142,10 @@ vertical-align: middle;
       </div>
     </div>
     <div class="mt-4 flex items-center justify-end gap-2">
-      <button id="aiPrevReviseBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Revise with AI</button>
+      <button id="aiPrevReviseBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Revise with AI</button>
       <div class="spacer"></div>
-      <button id="aiPrevCancelBtn" class="px-3 py-2 rounded-xl border border-[var(--border)]">Cancel</button>
-      <button id="aiPrevSaveBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Save Outline</button>
+      <button id="aiPrevCancelBtn" class="sf-btn sf-btn-ghost sf-btn-compact">Cancel</button>
+      <button id="aiPrevSaveBtn" class="sf-btn sf-btn-secondary sf-btn-compact">Save Outline</button>
     </div>
   </div>
   
@@ -1178,7 +1178,7 @@ vertical-align: middle;
 
     <div class="space-y-3">
 
-      <button id="googleBtn" class="w-full px-3 py-2 rounded-xl border border-[var(--border)] flex items-center justify-center gap-2">
+      <button id="googleBtn" class="sf-btn sf-btn-ghost w-full flex items-center justify-center gap-2">
 
         <img alt="" src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" class="w-5 h-5"/> Continue with Google
 
@@ -1202,9 +1202,9 @@ vertical-align: middle;
 
       <div id="signinRow" class="flex flex-wrap gap-3 justify-center">
 
-        <button id="emailSignInBtn" class="px-3 py-2 rounded-xl bg-sky-600 hover:bg-sky-500 text-white btn-wide">Sign in</button>
+        <button id="emailSignInBtn" class="sf-btn sf-btn-primary sf-btn-compact btn-wide">Sign in</button>
 
-        <button id="emailResetBtn" class="px-3 py-2 rounded-xl border border-[var(--border)] btn-wide">Reset password</button>
+        <button id="emailResetBtn" class="sf-btn sf-btn-ghost sf-btn-compact btn-wide">Reset password</button>
 
       </div>
 
@@ -1212,7 +1212,7 @@ vertical-align: middle;
 
       <div id="signupRow" class="hidden flex justify-center">
 
-        <button id="emailSignUpBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white btn-wide">Create account</button>
+        <button id="emailSignUpBtn" class="sf-btn sf-btn-secondary sf-btn-compact btn-wide">Create account</button>
 
       </div>
 
@@ -1349,9 +1349,9 @@ vertical-align: middle;
 
       <!-- Action Buttons -->
       <div class="flex gap-2 justify-end">
-        <button id="eventDeleteBtn" class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-sm" style="display:none;">Delete</button>
-        <button class="px-3 py-2 rounded-xl border border-[var(--border)] text-sm" data-close="1">Cancel</button>
-        <button id="eventSaveBtn" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm">Schedule</button>
+        <button id="eventDeleteBtn" class="sf-btn sf-btn-danger sf-btn-compact text-sm" style="display:none;">Delete</button>
+        <button class="sf-btn sf-btn-ghost sf-btn-compact text-sm" data-close="1">Cancel</button>
+        <button id="eventSaveBtn" class="sf-btn sf-btn-secondary sf-btn-compact text-sm">Schedule</button>
       </div>
 
     </div>
@@ -1426,7 +1426,7 @@ import {
 
 } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-auth.js";
 
-import { getFirestore, doc, getDoc, setDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
+import { getFirestore, doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteField } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-firestore.js";
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js";
 
 
@@ -1532,8 +1532,50 @@ const provider = new GoogleAuthProvider(); provider.setCustomParameters({ prompt
 const cloudStatus = $('#cloudStatus');
 
 let currentUser = null;
+let cloudTimerUnsubscribe = null;
 
 const userDocRef = (uid)=> doc(db, 'users', uid, 'apps', 'chess_planner_v2');
+
+const clearCloudTimerSubscription = ()=>{
+  if(cloudTimerUnsubscribe){
+    try{ cloudTimerUnsubscribe(); }catch{}
+    cloudTimerUnsubscribe = null;
+  }
+};
+
+const timerStateSignature = (st)=>{
+  if(!st) return '';
+  return JSON.stringify([
+    !!st.sessionStarted,
+    !!st.running,
+    Number(st.currentIndex||0),
+    Math.max(0, Math.round(st.secondsLeft||0)),
+    st.outlineId || null,
+    Number(st.lastSyncTs||0),
+    !!st.awaitingNext
+  ]);
+};
+
+function subscribeCloudTimer(uid){
+  clearCloudTimerSubscription();
+  if(!uid) return;
+
+  cloudTimerUnsubscribe = onSnapshot(userDocRef(uid), (snap)=>{
+    if(!snap.exists()) return;
+    const d = snap.data() || {};
+    if(!d.timer) return;
+
+    const incomingSig = timerStateSignature(d.timer);
+    if(!incomingSig || incomingSig === timerStateSignature(timerState)) return;
+
+    timerState = d.timer;
+    saveJSON('timer_state_v2', timerState);
+    setTimerFromState(timerState);
+    renderAll();
+    renderHomeSavedBar();
+    setCloudMode('Saved to cloud ✓');
+  }, ()=>{});
+}
 
 
 
@@ -1823,9 +1865,9 @@ function sfConfirm(message){
 
         <div class="flex justify-end gap-2">
 
-          <button class="px-3 py-2 rounded-xl border border-[var(--border)]" data-close="x" data-val="0">Cancel</button>
+          <button class="sf-btn sf-btn-ghost sf-btn-compact" data-close="x" data-val="0">Cancel</button>
 
-          <button class="px-3 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white" data-val="1">Confirm</button>
+          <button class="sf-btn sf-btn-danger sf-btn-compact" data-val="1">Confirm</button>
 
         </div>
 
@@ -1869,9 +1911,9 @@ function sfPrompt(label, initial=''){
 
         <div class="flex justify-end gap-2">
 
-          <button class="px-3 py-2 rounded-xl border border-[var(--border)]" data-close="x">Cancel</button>
+          <button class="sf-btn sf-btn-ghost sf-btn-compact" data-close="x">Cancel</button>
 
-          <button id="wSave" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white" data-ok="1">OK</button>
+          <button id="wSave" class="sf-btn sf-btn-secondary sf-btn-compact" data-ok="1">OK</button>
 
         </div>
 
@@ -2982,9 +3024,9 @@ function openWidgetEditor(widget, onSave, onCancel){
 
     <div class="mt-3 flex items-center justify-end gap-2">
 
-      <button class="px-3 py-2 rounded-xl border border-[var(--border)]" data-close="1">Cancel</button>
+      <button class="sf-btn sf-btn-ghost sf-btn-compact" data-close="1">Cancel</button>
 
-      <button id="wSave" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Save</button>
+      <button id="wSave" class="sf-btn sf-btn-secondary sf-btn-compact">Save</button>
 
     </div>
 
@@ -3870,8 +3912,8 @@ const { renderSavedOutlines } = setupSavedOutlines({
             <label class="flex items-center gap-2"><span>Max links per section</span><input id="aiOptMaxLinks" type="number" min="0" max="12" step="1" value="${Number(aiPrefs.maxLinksPerSection||5)}" class="input w-24"/></label>
           </div>
           <div class="mt-4 flex justify-end gap-2">
-            <button class="px-3 py-2 rounded-xl border border-[var(--border)]" data-close="1">Cancel</button>
-            <button id="aiOptSave" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white">Save</button>
+            <button class="sf-btn sf-btn-ghost sf-btn-compact" data-close="1">Cancel</button>
+            <button id="aiOptSave" class="sf-btn sf-btn-secondary sf-btn-compact">Save</button>
           </div>
         </div>`;
       document.body.appendChild(m);
@@ -3988,7 +4030,7 @@ function openAiPreview(outline, usedModel){
             <div class="lbl">Title</div>
             <input class="input flex-1 title-input" data-role="name" value="${escapeHtml(s.name||'')}" placeholder="Section title"/>
             <div class="mins-wrap"><span class="lbl">mins</span><input class="input mins-input w-20" type="number" min="1" step="1" data-role="mins" value="${Number(s.minutes||0)}"/></div>
-            <button class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white" data-act="save-section">Save</button>
+            <button class="sf-btn sf-btn-secondary sf-btn-compact" data-act="save-section">Save</button>
           </div>
           <div class="row" data-role="inline-shelf"></div>
           <div class="row">
@@ -4288,7 +4330,10 @@ onAuthStateChanged(auth, async (user)=>{
 
     }catch{ setLocalMode('Cloud read failed'); if(prefs.focusDefault) showFocus(); }
 
+    subscribeCloudTimer(user.uid);
+
   } else {
+    clearCloudTimerSubscription();
     authOpenBtn.classList.remove('hidden'); userBadge.classList.add('hidden'); setLocalMode('Local mode');
     // Clear outlines and folders when signed out
     try{

@@ -650,7 +650,7 @@
       if (event.notes) html += ` • ${event.notes}`;
       html += '</div></div>';
       html += '<div class="schedule-actions">';
-      html += `<button class="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs" onclick="window.startEventSession('${event.id}')">Start</button>`;
+      html += `<button class="sf-btn sf-btn-primary sf-btn-compact schedule-start-btn" onclick="window.startEventSession('${event.id}')">Start</button>`;
       html += '</div></div>';
     });
 
@@ -701,7 +701,7 @@
       if (event.notes) html += ` • ${event.notes}`;
       html += '</div></div>';
       html += '<div class="schedule-actions">';
-      html += `<button class="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs" onclick="window.startEventSession('${event.id}')">Start</button>`;
+      html += `<button class="sf-btn sf-btn-primary sf-btn-compact schedule-start-btn" onclick="window.startEventSession('${event.id}')">Start</button>`;
       html += '</div></div>';
     });
 
@@ -746,7 +746,7 @@
       if (event.notes) html += ` • ${event.notes}`;
       html += '</div></div>';
       html += '<div class="schedule-actions">';
-      html += `<button class="px-2 py-1 rounded-lg bg-[var(--accent)] text-white text-xs" onclick="window.startEventSession('${event.id}')">Start</button>`;
+      html += `<button class="sf-btn sf-btn-primary sf-btn-compact schedule-start-btn" onclick="window.startEventSession('${event.id}')">Start</button>`;
       html += '</div></div>';
     });
 
@@ -1667,12 +1667,12 @@
       if (weekViewEl) weekViewEl.style.display = 'none';
 
       if (monthBtn) {
-        monthBtn.classList.add('bg-[var(--accent)]', 'text-white');
-        monthBtn.classList.remove('border', 'border-[var(--border)]');
+        monthBtn.classList.add('sf-btn-primary');
+        monthBtn.classList.remove('sf-btn-ghost');
       }
       if (weekBtn) {
-        weekBtn.classList.remove('bg-[var(--accent)]', 'text-white');
-        weekBtn.classList.add('border', 'border-[var(--border)]');
+        weekBtn.classList.remove('sf-btn-primary');
+        weekBtn.classList.add('sf-btn-ghost');
       }
     } else {
       renderWeekView();
@@ -1682,12 +1682,12 @@
       if (weekViewEl) weekViewEl.style.display = 'block';
 
       if (weekBtn) {
-        weekBtn.classList.add('bg-[var(--accent)]', 'text-white');
-        weekBtn.classList.remove('border', 'border-[var(--border)]');
+        weekBtn.classList.add('sf-btn-primary');
+        weekBtn.classList.remove('sf-btn-ghost');
       }
       if (monthBtn) {
-        monthBtn.classList.remove('bg-[var(--accent)]', 'text-white');
-        monthBtn.classList.add('border', 'border-[var(--border)]');
+        monthBtn.classList.remove('sf-btn-primary');
+        monthBtn.classList.add('sf-btn-ghost');
       }
     }
   }
