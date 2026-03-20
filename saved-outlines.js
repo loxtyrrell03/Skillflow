@@ -613,6 +613,7 @@ export function setupSavedOutlines({
           const titleText = (li.querySelector('.title')?.textContent || '').trim();
           dragging = { from: idx, el: li, placeholder: makePh(li.offsetHeight, titleText) };
           li.classList.add('dragging'); li.after(dragging.placeholder);
+          setTimeout(()=>{ if(dragging?.el === li) li.classList.add('dragging-hidden'); }, 0);
           try{
             e.dataTransfer.setData('text/plain', JSON.stringify({type:'sec-move', from: idx, oid:o.id}));
             const img = new Image(); img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E";
@@ -620,7 +621,7 @@ export function setupSavedOutlines({
           }catch{}
           e.dataTransfer.effectAllowed='move';
         });
-        li.addEventListener('dragend', ()=>{ li.classList.remove('dragging'); dragging?.placeholder?.remove(); dragging = null; });
+        li.addEventListener('dragend', ()=>{ li.classList.remove('dragging', 'dragging-hidden'); dragging?.placeholder?.remove(); dragging = null; });
         const over = (e)=>{ if(!dragging) return; e.preventDefault(); const r = li.getBoundingClientRect(); const before = e.clientY < (r.top + r.height/2); const ph = dragging.placeholder; if(!ph) return; if(before){ if(li.previousSibling !== ph) li.parentElement.insertBefore(ph, li); }else{ if(li.nextSibling !== ph) li.after(ph); } };
         li.addEventListener('dragover', over); li.addEventListener('dragenter', over);
       });
@@ -637,11 +638,14 @@ export function setupSavedOutlines({
         const finalTo = (to > from) ? to - 1 : to;
         if(from !== finalTo && from >= 0 && finalTo >= 0){
           const list = (getSavedOutlines && getSavedOutlines()) || [];
-          const me   = byId(list, o.id); if(!me) return;
-          const [moved] = me.sections.splice(from,1);
-          me.sections.splice(finalTo,0,moved);
-          setSavedOutlines(list); persist(o.id);
+          const me   = byId(list, o.id);
+          if(me){
+            const [moved] = me.sections.splice(from,1);
+            me.sections.splice(finalTo,0,moved);
+            setSavedOutlines(list); persist(o.id);
+          }
         }
+        dragging?.el?.classList.remove('dragging', 'dragging-hidden');
         dragging?.placeholder?.remove(); dragging = null; renderSavedOutlines();
       });
 

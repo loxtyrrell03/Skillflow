@@ -3685,6 +3685,7 @@ function renderOutline(){
       dragging = { from: idx, el: li, placeholder: makePh(li.offsetHeight, titleText) };
 
       li.classList.add('dragging'); li.after(dragging.placeholder);
+      setTimeout(()=>{ if(dragging?.el === li) li.classList.add('dragging-hidden'); }, 0);
 
       try{
 
@@ -3698,7 +3699,7 @@ function renderOutline(){
 
     });
 
-    li.addEventListener('dragend', ()=>{ li.classList.remove('dragging'); dragging?.placeholder?.remove(); dragging = null; });
+    li.addEventListener('dragend', ()=>{ li.classList.remove('dragging', 'dragging-hidden'); dragging?.placeholder?.remove(); dragging = null; });
 
     const onOver = (e)=>{ if(!dragging) return; e.preventDefault(); const r = li.getBoundingClientRect(); const before = e.clientY < (r.top + r.height/2); const ph = dragging.placeholder; if(before){ if(li.previousSibling !== ph) outline.insertBefore(ph, li); }else{ if(li.nextSibling !== ph) li.after(ph); } };
 
@@ -3736,7 +3737,7 @@ function renderOutline(){
 
     }
 
-    dragging.el.classList.remove('dragging'); dragging.placeholder.remove(); dragging = null;
+    dragging.el.classList.remove('dragging', 'dragging-hidden'); dragging.placeholder.remove(); dragging = null;
 
   });
 
@@ -4178,17 +4179,18 @@ function openAiPreview(outline, usedModel){
     const idx = Number(li.dataset.idx); const title = (li.querySelector('.title')?.textContent||'').trim();
     dragging = { from: idx, el: li, placeholder: makePh(li.offsetHeight, title) };
     li.classList.add('dragging'); li.after(dragging.placeholder);
+    setTimeout(()=>{ if(dragging?.el === li) li.classList.add('dragging-hidden'); }, 0);
     try{ const img = new Image(); img.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221%22 height=%221%22/%3E'; e.dataTransfer.setDragImage(img,0,0); }catch{}
     e.dataTransfer.effectAllowed='move';
   });
-  list.addEventListener('dragend', ()=>{ if(dragging){ dragging.el.classList.remove('dragging'); dragging.placeholder.remove(); dragging=null; } });
+  list.addEventListener('dragend', ()=>{ if(dragging){ dragging.el.classList.remove('dragging', 'dragging-hidden'); dragging.placeholder.remove(); dragging=null; } });
   const overRow = (e)=>{
     if(!dragging) return; const li = e.target.closest('li.outline-row'); if(!li || li.classList.contains('dragging')) return; e.preventDefault(); const r=li.getBoundingClientRect(); const before = e.clientY < (r.top + r.height/2); const ph = dragging.placeholder; if(!ph) return; if(before){ if(li.previousSibling!==ph) li.parentElement.insertBefore(ph, li); } else { if(li.nextSibling!==ph) li.after(ph); }
   };
   list.addEventListener('dragover', overRow); list.addEventListener('dragenter', overRow);
   list.addEventListener('drop', (e)=>{
     if(!dragging) return; e.preventDefault(); const rows = Array.from(list.querySelectorAll('li.outline-row')); const phIndex = rows.indexOf(dragging.placeholder); const to = phIndex < 0 ? rows.length-1 : phIndex; const from = dragging.from; const finalTo = (to > from) ? to - 1 : to; if(from!==finalTo && from>=0 && finalTo>=0){ const [m] = __aiDraft.sections.splice(from,1); __aiDraft.sections.splice(finalTo,0,m); }
-    dragging.placeholder.remove(); dragging=null; renderList();
+    dragging.el.classList.remove('dragging', 'dragging-hidden'); dragging.placeholder.remove(); dragging=null; renderList();
   });
   function close(){ modal.classList.add('hidden'); modal.setAttribute('aria-hidden','true'); }
   modal.classList.remove('hidden'); modal.setAttribute('aria-hidden','false');

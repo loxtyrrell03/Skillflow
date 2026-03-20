@@ -364,6 +364,10 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 .section-preview.dragging{
   opacity:0;
 }
+.outline-row.dragging-hidden,
+.section-preview.dragging-hidden{
+  display:none !important;
+}
 
 /* Do not create a visible gap for the placeholder while dragging */
 /* (Reverted) Let the JS placeholder control spacing; no special styling */
