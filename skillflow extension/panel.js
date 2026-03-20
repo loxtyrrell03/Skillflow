@@ -240,8 +240,12 @@ const applyResolvedPosition = (nextState, { persist = true } = {}) => {
   if (persist) saveTimerState();
 };
 
-const pushRemoteTimerState = async (nextState) => {
+const pushRemoteTimerState = async (nextState, { optimistic = false } = {}) => {
   if (!state.user || !nextState) return;
+
+  if (optimistic) {
+    applyResolvedPosition(nextState, { persist: false });
+  }
 
   const outlineId =
     state.timerOutlineId ||
@@ -271,6 +275,17 @@ const pushRemoteTimerState = async (nextState) => {
     setCloudStatus("Cloud sync failed");
     setStatus(error?.message || "Couldn't sync the new timer position to Skillflow.", "error");
   }
+};
+
+const commitTimerState = (nextState, { optimistic = false } = {}) => {
+  if (!nextState) return;
+
+  if (isCloudMirrorMode()) {
+    pushRemoteTimerState(nextState, { optimistic });
+    return;
+  }
+
+  applyResolvedPosition(nextState);
 };
 
 const applySharedTimerState = (sharedTimer) => {
@@ -556,12 +571,7 @@ const setElapsedPosition = (targetElapsed) => {
   const nextState = resolveElapsedPosition(targetElapsed);
   if (!nextState) return;
 
-  if (isCloudMirrorMode()) {
-    pushRemoteTimerState(nextState);
-    return;
-  }
-
-  applyResolvedPosition(nextState);
+  commitTimerState(nextState, { optimistic: isCloudMirrorMode() });
 };
 
 const renderTimer = () => {
@@ -611,15 +621,15 @@ const updateControls = () => {
   const hasSession = sections.length > 0;
   const mirrorMode = isCloudMirrorMode();
 
-  prevBtn.disabled = mirrorMode || !hasSession || state.currentIndex <= 0;
-  nextBtn.disabled = mirrorMode || !hasSession || state.currentIndex >= sections.length - 1;
-  startBtn.disabled = mirrorMode || !hasSession;
-  pauseBtn.disabled = mirrorMode || !state.running;
-  stopBtn.disabled = mirrorMode || !hasSession;
+  prevBtn.disabled = !hasSession || state.currentIndex <= 0;
+  nextBtn.disabled = !hasSession || (!state.awaitingNext && state.currentIndex >= sections.length - 1);
+  startBtn.disabled = !hasSession || state.running || state.awaitingNext;
+  pauseBtn.disabled = !state.running;
+  stopBtn.disabled = !hasSession;
   loadSessionBtn.disabled = mirrorMode || sessionSelect.disabled || !sessionSelect.value;
 
-  startBtn.classList.toggle("hidden", state.running && !mirrorMode);
-  pauseBtn.classList.toggle("hidden", !state.running || mirrorMode);
+  startBtn.classList.toggle("hidden", state.running);
+  pauseBtn.classList.toggle("hidden", !state.running);
   if (progressHost) {
     progressHost.setAttribute("aria-disabled", hasSession ? "false" : "true");
   }
@@ -629,7 +639,7 @@ const updateControls = () => {
     } else if (!hasSession) {
       progressCaption.textContent = "Load a session to start focusing.";
     } else if (mirrorMode) {
-      progressCaption.textContent = "Live sync from Skillflow. Click the bar to jump sections, and the website will follow.";
+      progressCaption.textContent = "Live sync from Skillflow. Use the controls or click the bar, and the website will follow.";
     } else {
       progressCaption.textContent = "Click the bar to jump within the session.";
     }
@@ -675,80 +685,100 @@ const setActiveOutline = (outlineId, resetTimer = true) => {
 };
 
 const setCurrentIndex = (index) => {
-  if (isCloudMirrorMode()) return;
-
   const sections = state.activeOutline?.sections || [];
   if (!sections.length) return;
   const nextIndex = Math.min(Math.max(index, 0), sections.length - 1);
-  state.currentIndex = nextIndex;
-  state.secondsLeft = sections[nextIndex].minutes * 60;
-  if (state.running) {
-    state.endTimeMs = Date.now() + state.secondsLeft * 1000;
-  }
-  renderAll();
-  saveTimerState();
+  const nextSeconds = getSectionSeconds(sections[nextIndex]);
+  commitTimerState(
+    {
+      currentIndex: nextIndex,
+      secondsLeft: nextSeconds,
+      sessionStarted: state.sessionStarted,
+      running: state.running && nextSeconds > 0,
+      awaitingNext: false
+    },
+    { optimistic: isCloudMirrorMode() }
+  );
 };
 
 const startTimer = () => {
-  if (isCloudMirrorMode()) return;
-
   const sections = state.activeOutline?.sections || [];
   if (!sections.length) {
     setStatus("Load a session to start the timer.", "warning");
     return;
   }
   if (state.running) return;
-  state.sessionStarted = true;
-  state.running = true;
-  state.endTimeMs = Date.now() + state.secondsLeft * 1000;
-  tickId = setInterval(tick, 250);
-  tick();
-  updateControls();
-  saveTimerState();
+
+  const currentSection = sections[state.currentIndex];
+  const nextSeconds = Math.max(0, state.secondsLeft || getSectionSeconds(currentSection));
+  commitTimerState(
+    {
+      currentIndex: state.currentIndex,
+      secondsLeft: nextSeconds,
+      sessionStarted: true,
+      running: nextSeconds > 0,
+      awaitingNext: false
+    },
+    { optimistic: isCloudMirrorMode() }
+  );
 };
 
 const pauseTimer = () => {
-  if (isCloudMirrorMode()) return;
   if (!state.running) return;
-  state.running = false;
-  if (tickId) {
-    clearInterval(tickId);
-    tickId = null;
-  }
-  if (state.endTimeMs) {
-    state.secondsLeft = Math.max(0, Math.round((state.endTimeMs - Date.now()) / 1000));
-  }
-  state.endTimeMs = null;
-  renderAll();
-  saveTimerState();
+
+  const nextSeconds = state.endTimeMs
+    ? Math.max(0, Math.round((state.endTimeMs - Date.now()) / 1000))
+    : Math.max(0, state.secondsLeft);
+  commitTimerState(
+    {
+      currentIndex: state.currentIndex,
+      secondsLeft: nextSeconds,
+      sessionStarted: state.sessionStarted,
+      running: false,
+      awaitingNext: state.awaitingNext
+    },
+    { optimistic: isCloudMirrorMode() }
+  );
 };
 
 const stopTimer = () => {
-  if (isCloudMirrorMode()) return;
-
   const sections = state.activeOutline?.sections || [];
-  if (tickId) {
-    clearInterval(tickId);
-    tickId = null;
-  }
-  state.running = false;
-  state.sessionStarted = false;
-  state.currentIndex = 0;
-  state.secondsLeft = sections[0] ? sections[0].minutes * 60 : 0;
-  state.endTimeMs = null;
-  renderAll();
-  saveTimerState();
+  const nextSeconds = sections[0] ? getSectionSeconds(sections[0]) : 0;
+  commitTimerState(
+    {
+      currentIndex: 0,
+      secondsLeft: nextSeconds,
+      sessionStarted: false,
+      running: false,
+      awaitingNext: false
+    },
+    { optimistic: isCloudMirrorMode() }
+  );
 };
 
 const handleSectionComplete = () => {
   if (isCloudMirrorMode()) {
-    state.running = false;
-    state.endTimeMs = null;
-    if (tickId) {
-      clearInterval(tickId);
-      tickId = null;
-    }
-    renderAll();
+    const sections = state.activeOutline?.sections || [];
+    const isLastSection = state.currentIndex >= sections.length - 1;
+
+    commitTimerState(
+      isLastSection
+        ? {
+            currentIndex: Math.max(0, sections.length - 1),
+            secondsLeft: 0,
+            sessionStarted: false,
+            running: false,
+            awaitingNext: false
+          }
+        : {
+            currentIndex: state.currentIndex,
+            secondsLeft: 0,
+            sessionStarted: true,
+            running: false,
+            awaitingNext: true
+          },
+      { optimistic: true }
+    );
     return;
   }
 
@@ -796,6 +826,7 @@ const saveTimerState = () => {
     secondsLeft: state.secondsLeft,
     running: state.running,
     sessionStarted: state.sessionStarted,
+    awaitingNext: state.awaitingNext,
     endTimeMs: state.endTimeMs,
     updatedAt: Date.now()
   };
@@ -827,6 +858,7 @@ const applyTimerState = (timerState) => {
   state.secondsLeft = storedSeconds !== null ? storedSeconds : fallbackSeconds;
   state.sessionStarted = !!timerState.sessionStarted;
   state.running = !!timerState.running;
+  state.awaitingNext = !!timerState.awaitingNext;
 
   if (state.running) {
     state.endTimeMs = timerState.endTimeMs || Date.now() + state.secondsLeft * 1000;
@@ -952,7 +984,26 @@ startBtn.addEventListener("click", startTimer);
 pauseBtn.addEventListener("click", pauseTimer);
 stopBtn.addEventListener("click", stopTimer);
 prevBtn.addEventListener("click", () => setCurrentIndex(state.currentIndex - 1));
-nextBtn.addEventListener("click", () => setCurrentIndex(state.currentIndex + 1));
+nextBtn.addEventListener("click", () => {
+  if (state.awaitingNext) {
+    const sections = state.activeOutline?.sections || [];
+    const nextIndex = Math.min(state.currentIndex + 1, Math.max(0, sections.length - 1));
+    const nextSeconds = sections[nextIndex] ? getSectionSeconds(sections[nextIndex]) : 0;
+    commitTimerState(
+      {
+        currentIndex: nextIndex,
+        secondsLeft: nextSeconds,
+        sessionStarted: true,
+        running: nextSeconds > 0,
+        awaitingNext: false
+      },
+      { optimistic: isCloudMirrorMode() }
+    );
+    return;
+  }
+
+  setCurrentIndex(state.currentIndex + 1);
+});
 
 onAuthStateChanged(auth, (user) => {
   state.user = user || null;

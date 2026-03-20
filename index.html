@@ -2106,6 +2106,9 @@ function setTimerFromState(st){
 
   sessionStarted=!!st.sessionStarted; running=false; currentIndex=st.currentIndex||0; secondsLeft=Math.max(0,Math.round(st.secondsLeft||0));
 
+  if(rafId) cancelAnimationFrame(rafId); rafId = null;
+  if(bgTickId) clearInterval(bgTickId); bgTickId = null;
+
   awaitingNext = !!st.awaitingNext;
 
   if(st.running && st.lastSyncTs){
@@ -2124,13 +2127,23 @@ function setTimerFromState(st){
 
   }
 
+  running = !!st.running && !awaitingNext && currentSession.length > 0 && secondsLeft > 0;
   totalSessionSecs=scheduleTotalSecs(currentSession);
+
+  if(running){
+    syncEnd();
+    loop();
+    bgTickId = setInterval(tick, 1000);
+  } else {
+    endTimeMs = null;
+  }
 
   renderAll();
 
   if(awaitingNext) showNextGate(); else hideNextGate();
 
   updateStartBtnLabel();
+  updateClockColor();
 
 }
 
