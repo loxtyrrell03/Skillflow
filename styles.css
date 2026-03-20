@@ -1,9 +1,15 @@
 :root{
   --bg:#f3f8ff; --fg:#0f172a; --text:var(--fg); --muted:#526277;
-  --border:#b9cde1; --line:#bfd3e8; --borderW:1px;
+  --border:#94a3b8; --line:#aebfd2; --borderW:2px;
   --panel:#ffffff; --panel-strong:#ffffff; --panel-muted:#edf5ff; --panel-soft:rgba(255,255,255,.82);
   --accent:#0284c7; --accent-600:#0369a1; --accent-100:#dbeafe; --accent-50:#eff6ff;
   --ok:#059669; --danger:#dc2626;
+  --edge-soft:color-mix(in srgb, var(--border) 58%, white);
+  --edge-medium:color-mix(in srgb, var(--border) 72%, white);
+  --edge-strong:color-mix(in srgb, var(--border) 84%, white);
+  --edge-highlight:rgba(255,255,255,.58);
+  --surface-stroke:calc(var(--borderW) * .72);
+  --surface-stroke-strong:calc(var(--borderW) * .86);
 
   /* Design system tokens */
   --radius-sm:10px; --radius-md:14px; --radius-lg:18px; --radius-xl:24px;
@@ -151,14 +157,14 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 }
 .card{
   background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.94));
-  border:1px solid color-mix(in srgb, var(--line) 84%, white);
+  border:var(--surface-stroke) solid var(--edge-medium);
   border-radius:20px;
-  box-shadow:var(--shadow-2);
+  box-shadow:inset 0 0 0 1px var(--edge-highlight), var(--shadow-2);
   overflow:hidden;
   transition:box-shadow var(--normal) var(--ease), transform var(--fast) var(--ease), background var(--fast) var(--ease);
   backdrop-filter:blur(8px);
 }
-.card:hover{ box-shadow:0 22px 48px rgba(15,23,42,.1) }
+.card:hover{ box-shadow:inset 0 0 0 1px rgba(255,255,255,.64), 0 22px 48px rgba(15,23,42,.1) }
 .block-sub{font-size:.74rem;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700}
 
 /* ↑ Increased title size for readability on Overview and panels */
@@ -173,21 +179,21 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
   min-height:44px;
   padding:.72rem 1rem;
   border-radius:14px;
-  border:1px solid color-mix(in srgb, var(--line) 88%, white);
+  border:var(--surface-stroke) solid var(--edge-strong);
   background:rgba(255,255,255,.92);
   color:var(--fg);
   font-weight:700;
   line-height:1;
-  box-shadow:0 8px 18px rgba(15,23,42,.06);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.7), 0 8px 18px rgba(15,23,42,.06);
   transition:transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease), filter var(--fast) var(--ease), background var(--fast) var(--ease);
 }
 .sf-btn:hover{
   transform:translateY(-1px);
-  box-shadow:0 12px 24px rgba(15,23,42,.1);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.74), 0 12px 24px rgba(15,23,42,.1);
 }
 .sf-btn:focus-visible{
   outline:2px solid var(--accent-100);
-  box-shadow:0 0 0 2px rgba(2,132,199,.2), 0 12px 24px rgba(15,23,42,.1);
+  box-shadow:0 0 0 2px rgba(2,132,199,.2), inset 0 0 0 1px rgba(255,255,255,.74), 0 12px 24px rgba(15,23,42,.1);
 }
 .sf-btn:disabled{
   opacity:.48;
@@ -222,9 +228,9 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 }
 
 .btn-xs,.btn-xxs{
-  border:1px solid color-mix(in srgb, var(--line) 86%, white); background:rgba(255,255,255,.88);
+  border:var(--surface-stroke) solid var(--edge-medium); background:rgba(255,255,255,.88);
   transition:transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease), background var(--fast) var(--ease);
-  box-shadow:0 6px 14px rgba(15,23,42,.05);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.68), 0 6px 14px rgba(15,23,42,.05);
 }
 .btn-xs:focus-visible,.btn-xxs:focus-visible{outline:2px solid var(--accent-100); box-shadow:0 0 0 2px rgba(14,165,233,.25)}
 .btn-xs:hover,.btn-xxs:hover{transform:translateY(-1px)}
@@ -232,10 +238,10 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 .btn-xxs{font-size:.68rem;padding:.18rem .45rem;border-radius:.4rem}
 
 .chip{
-  padding:.35rem .7rem;border-radius:9999px;border:1px solid color-mix(in srgb, var(--line) 85%, white);
+  padding:.35rem .7rem;border-radius:9999px;border:var(--surface-stroke) solid var(--edge-medium);
   display:inline-flex;gap:.35rem;align-items:center;background:rgba(255,255,255,.88);
   transition:transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease), background var(--fast) var(--ease);
-  box-shadow:0 6px 14px rgba(15,23,42,.05);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.68), 0 6px 14px rgba(15,23,42,.05);
 }
 .chip:hover{background:var(--panel-muted); transform:translateY(-1px)}
 .chip-active{border-color:var(--accent);box-shadow:0 0 0 2px rgba(14,165,233,.2);background:var(--accent-100);color:#0b4661}
@@ -264,8 +270,8 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 .tabs-bar{
   display:flex;gap:0;border-radius:18px;padding:.4rem;
   background:rgba(255,255,255,.78);
-  border:1px solid color-mix(in srgb, var(--line) 82%, white);
-  box-shadow:0 8px 20px rgba(15,23,42,.06);
+  border:var(--surface-stroke) solid var(--edge-medium);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.64), 0 8px 20px rgba(15,23,42,.06);
 }
 .tab-link{padding:.6rem 1rem;font-weight:800;color:var(--muted);border-radius:.6rem;white-space:nowrap;transition:background var(--fast) var(--ease), color var(--fast) var(--ease)}
 .tab-link:hover{color:#111827;background:var(--panel-muted)}
@@ -280,37 +286,38 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
   display:grid;
   gap:12px;
   padding:18px 20px;
-  border:1px solid color-mix(in srgb, var(--line) 82%, white);
+  border:var(--surface-stroke-strong) solid var(--edge-medium);
   border-radius:24px;
   background:linear-gradient(180deg, rgba(255,255,255,.96), rgba(239,246,255,.88));
-  box-shadow:var(--shadow-2);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.58), var(--shadow-2);
 }
 .planner-control-row{
   padding:14px 16px;
-  border:1px solid color-mix(in srgb, var(--line) 80%, white);
+  border:var(--surface-stroke-strong) solid var(--edge-medium);
   border-radius:22px;
   background:rgba(255,255,255,.8);
-  box-shadow:var(--shadow-1);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.58), var(--shadow-1);
 }
 .planner-subsurface,
 .section-card,
 .outline-panel{
   border-radius:22px;
-  border:1px solid color-mix(in srgb, var(--line) 82%, white);
+  border:var(--surface-stroke-strong) solid var(--edge-medium);
   background:linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.94));
-  box-shadow:var(--shadow-2);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.58), var(--shadow-2);
 }
 #progressHost,
 #focusProgressHost{
-  border:1px solid color-mix(in srgb, var(--line) 85%, white);
+  border:var(--surface-stroke) solid var(--edge-medium);
   background:rgba(255,255,255,.9);
-  box-shadow:inset 0 1px 0 rgba(255,255,255,.72);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.72), inset 0 0 0 1px rgba(255,255,255,.4);
 }
 #homeSavedScroller{
   background:rgba(255,255,255,.86) !important;
-  border:1px solid color-mix(in srgb, var(--line) 82%, white) !important;
+  border:var(--surface-stroke) solid var(--edge-medium) !important;
   border-radius:18px !important;
   padding:10px !important;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.58);
 }
 #outline{
   display:grid;
@@ -331,13 +338,13 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 .outline-row{
   padding:.78rem .75rem;
   margin-bottom:10px;
-  border:1px solid color-mix(in srgb, var(--line) 80%, white);
+  border:var(--surface-stroke) solid var(--edge-medium);
   border-radius:16px;
   background:rgba(255,255,255,.86);
-  box-shadow:0 10px 22px rgba(15,23,42,.05);
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.58), 0 10px 22px rgba(15,23,42,.05);
   transition:background var(--fast) var(--ease), transform var(--fast) var(--ease), box-shadow var(--fast) var(--ease);
 }
-.outline-row:hover{background:var(--panel-muted); transform:translateY(-1px); box-shadow:0 14px 28px rgba(15,23,42,.08)}
+.outline-row:hover{background:var(--panel-muted); transform:translateY(-1px); box-shadow:inset 0 0 0 1px rgba(255,255,255,.62), 0 14px 28px rgba(15,23,42,.08)}
 .outline-active{background:var(--accent-100)!important;box-shadow:inset 0 0 0 1px rgba(14,165,233,.5)}
 .clock-badge{
   font-family:ui-monospace,Menlo,Consolas,monospace;
@@ -360,12 +367,12 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
 /* (Reverted) Let the JS placeholder control spacing; no special styling */
 
 /* ===== Horizontal widget shelves ===== */
-.editor-shelf{display:flex;flex-wrap:nowrap;gap:.5rem;overflow-x:auto;overflow-y:hidden;padding:.7rem;border:1px solid color-mix(in srgb, var(--line) 84%, white);border-radius:16px;background:rgba(255,255,255,.88);scroll-snap-type:x proximity;width:100%;min-width:0;scrollbar-gutter:stable both-edges;overscroll-behavior-x:contain;box-shadow:inset 0 1px 0 rgba(255,255,255,.72)}
+.editor-shelf{display:flex;flex-wrap:nowrap;gap:.5rem;overflow-x:auto;overflow-y:hidden;padding:.7rem;border:var(--surface-stroke) solid var(--edge-medium);border-radius:16px;background:rgba(255,255,255,.88);scroll-snap-type:x proximity;width:100%;min-width:0;scrollbar-gutter:stable both-edges;overscroll-behavior-x:contain;box-shadow:inset 0 1px 0 rgba(255,255,255,.72), inset 0 0 0 1px rgba(255,255,255,.42)}
 .editor-shelf>*{scroll-snap-align:start}
 .editor-shelf::-webkit-scrollbar{height:8px}
 .editor-shelf::-webkit-scrollbar-thumb{background:color-mix(in srgb,var(--muted) 45%, transparent); border-radius:999px}
 .editor-shelf::-webkit-scrollbar-track{background:transparent}
-.section-links-bar{min-height:52px;border:1px solid color-mix(in srgb, var(--line) 84%, white);border-radius:16px;background:rgba(255,255,255,.88);padding:.65rem;display:flex;flex-wrap:wrap;gap:.5rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.72)}
+.section-links-bar{min-height:52px;border:var(--surface-stroke) solid var(--edge-medium);border-radius:16px;background:rgba(255,255,255,.88);padding:.65rem;display:flex;flex-wrap:wrap;gap:.5rem;box-shadow:inset 0 1px 0 rgba(255,255,255,.72), inset 0 0 0 1px rgba(255,255,255,.42)}
 .section-links-bar.drag-over-outline{outline:2px dashed rgba(14,165,233,.9);outline-offset:4px}
 
 /* ===== Saved-tab compact edit ===== */
