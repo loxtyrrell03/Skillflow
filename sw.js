@@ -1,5 +1,5 @@
-const CACHE_NAME = "skillflow-shell-v3";
-const RUNTIME_CACHE = "skillflow-runtime-v3";
+const CACHE_NAME = "skillflow-shell-v4";
+const RUNTIME_CACHE = "skillflow-runtime-v4";
 const APP_SCOPE = new URL(self.registration.scope);
 const normalizeScopedPath = (path = "./") => {
   if (typeof path !== "string") return "./";

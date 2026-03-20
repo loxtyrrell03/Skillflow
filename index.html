@@ -21,7 +21,7 @@
 
 <link rel="stylesheet" href="./styles.css?v=20260320b"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
-<link rel="manifest" href="./manifest.webmanifest?v=20260320e"/>
+<link rel="manifest" href="./manifest.webmanifest?v=20260320f"/>
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
 
 <style id="index-overrides">
@@ -1545,9 +1545,12 @@ let prefs = loadJSON('prefs_v1') || {
   outlineCollapsed:false,
   focusDefault:false,
   notifyEnabled:false,
+  sectionAlertsDisabledExplicitly:false,
   theme:{ bg:'#ffffff', fg:'#0f172a', accent:'#0ea5e9', border:'#94a3b8', borderW:2 },
   audio:{ volume:0.5, tone:'beep', duration:0.6 }
 };
+if(typeof prefs.notifyEnabled !== 'boolean') prefs.notifyEnabled = false;
+if(typeof prefs.sectionAlertsDisabledExplicitly !== 'boolean') prefs.sectionAlertsDisabledExplicitly = false;
 let savedOutlines = loadJSON('saved_outlines_v1') || [];
 let savedFolders = loadJSON('outline_folders_v1') || []; // {id, name}
 const LAST_USED_OUTLINE_FOLDER_KEY = 'last_used_outline_folder_v1';
@@ -1694,6 +1697,20 @@ function applyInstallHintVisibility(){
   card.classList.toggle('hidden', !shouldShowInstallHint());
 }
 
+function hasGrantedNotificationPermission(){
+  return typeof Notification !== 'undefined' && Notification.permission === 'granted';
+}
+
+function areSectionAlertsEnabled(){
+  return hasGrantedNotificationPermission() && prefs.sectionAlertsDisabledExplicitly !== true;
+}
+
+function setSectionAlertsEnabled(enabled){
+  prefs.notifyEnabled = !!enabled;
+  prefs.sectionAlertsDisabledExplicitly = !enabled;
+  savePrefs();
+}
+
 function refreshPhoneNotificationCard(){
   if(!phoneNotifyCard) return;
   const show = document.body.classList.contains('is-phone');
@@ -1703,7 +1720,7 @@ function refreshPhoneNotificationCard(){
   const preview = currentSectionNotificationParts();
   if(phoneNotifyPreview) phoneNotifyPreview.textContent = preview.preview;
 
-  const enabled = !!(prefs.notifyEnabled && typeof Notification !== 'undefined' && Notification.permission === 'granted');
+  const enabled = areSectionAlertsEnabled();
   if(phoneEnableNotifBtn){
     if(enabled){
       phoneEnableNotifBtn.textContent = 'Section Alerts Enabled';
@@ -1737,7 +1754,7 @@ async function ensureServiceWorkerReady(){
   if(!('serviceWorker' in navigator) || !window.isSecureContext) return null;
   if(swRegistration) return swRegistration;
   try{
-    const reg = await navigator.serviceWorker.register('./sw.js?v=20260320e', { scope:'./', updateViaCache:'none' });
+    const reg = await navigator.serviceWorker.register('./sw.js?v=20260320f', { scope:'./', updateViaCache:'none' });
     swRegistration = reg;
     navigator.serviceWorker.addEventListener('controllerchange', ()=>{ swRegistration = null; });
     const ready = await navigator.serviceWorker.ready;
@@ -1795,7 +1812,7 @@ async function syncAccountPushSubscription(opts = {}){
     return null;
   }
 
-  if(unsubscribe || !prefs.notifyEnabled || Notification?.permission !== 'granted'){
+  if(unsubscribe || !areSectionAlertsEnabled()){
     if(sub){
       const endpoint = sub.endpoint;
       try{ await sub.unsubscribe(); }catch{}
@@ -1849,7 +1866,7 @@ async function syncSectionAlertForCurrentState(){
     return;
   }
 
-  if(!prefs.notifyEnabled || !sessionStarted || !running || awaitingNext || !currentSession[currentIndex] || secondsLeft <= 0){
+  if(!areSectionAlertsEnabled() || !sessionStarted || !running || awaitingNext || !currentSession[currentIndex] || secondsLeft <= 0){
     try{ await syncSectionAlertFn({ enabled:false }); }catch(err){ console.warn('Could not cancel section alert', err); }
     return;
   }
@@ -1879,7 +1896,7 @@ const queueSectionAlertSync = debounce(()=>{ syncSectionAlertForCurrentState(); 
 
 async function deliverDeviceNotification(preview, opts = {}){
   const { force = false, showSuccessToast = false, toastOnMissingInstall = false } = opts;
-  if(!force && !prefs.notifyEnabled) return false;
+  if(!force && !areSectionAlertsEnabled()) return false;
   if(typeof Notification === 'undefined' || Notification.permission !== 'granted'){
     if(showSuccessToast) showToast('Allow notifications first.','error');
     return false;
@@ -1897,10 +1914,15 @@ async function deliverDeviceNotification(preview, opts = {}){
     }
   }
 
-  return await sendNotify(preview.title, preview.body);
+  return await sendNotify(preview.title, preview.body, { force });
 }
 
 async function sendPushTestNotification(){
+  if(hasGrantedNotificationPermission()){
+    setSectionAlertsEnabled(true);
+    updateNotifyBtn();
+    refreshPhoneNotificationCard();
+  }
   const preview = currentSectionNotificationParts();
   return await deliverDeviceNotification(preview, { force:true, showSuccessToast:true, toastOnMissingInstall:true });
 }
@@ -2722,22 +2744,23 @@ async function enableNotifications(){
     try{ perm = await Notification.requestPermission(); }catch{ perm='denied'; }
   }
   if(perm !== 'granted'){ showToast('Notifications denied. Enable in browser settings.','error'); return false; }
-  prefs.notifyEnabled = true; savePrefs(); updateNotifyBtn();
+  setSectionAlertsEnabled(true); updateNotifyBtn();
   await ensureBestNotificationChannel({ toastOnMissingInstall:true });
   queueSectionAlertSync();
   refreshPhoneNotificationCard();
   return true;
 }
 function disableNotifications(){
-  prefs.notifyEnabled=false; savePrefs(); updateNotifyBtn();
+  setSectionAlertsEnabled(false); updateNotifyBtn();
   syncAccountPushSubscription({ unsubscribe:true }).catch(()=>{});
   queueSectionAlertSync();
   refreshPhoneNotificationCard();
 }
 function updateNotifyBtn(){ /* legacy button removed */ }
-async function sendNotify(title, body){
+async function sendNotify(title, body, opts = {}){
+  const { force = false } = opts;
   try{
-    if(!prefs.notifyEnabled || !canNotify() || Notification.permission!=='granted') return;
+    if((!force && !areSectionAlertsEnabled()) || !canNotify() || Notification.permission!=='granted') return;
     const options = {
       body,
       icon:'./icons/icon-192.png',
@@ -4876,7 +4899,7 @@ async function refreshNotifUI(){
   }
 
   if(toggleSectionAlerts){
-    toggleSectionAlerts.checked = !!prefs.notifyEnabled;
+    toggleSectionAlerts.checked = areSectionAlertsEnabled();
     toggleSectionAlerts.disabled = (perm === 'unsupported');
   }
 
@@ -6219,7 +6242,7 @@ window.refreshPhoneNotificationCard = refreshPhoneNotificationCard;
 applyInstallHintVisibility();
 ensureServiceWorkerReady().then(async ()=>{
   await refreshPushSubscriptionState();
-  if(prefs.notifyEnabled && Notification?.permission === 'granted'){
+  if(areSectionAlertsEnabled()){
     ensureBestNotificationChannel().catch(()=>{});
   }
 }).catch(()=>{});
@@ -6235,7 +6258,7 @@ try{
     applyInstallHintVisibility();
     refreshPushSubscriptionState().then(()=>{
       refreshNotifUI();
-      if(prefs.notifyEnabled && Notification?.permission === 'granted'){
+      if(areSectionAlertsEnabled()){
         ensureBestNotificationChannel().catch(()=>{});
       }
     }).catch(()=>{});
