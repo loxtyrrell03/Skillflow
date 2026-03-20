@@ -1,5 +1,5 @@
-const CACHE_NAME = "skillflow-shell-v2";
-const RUNTIME_CACHE = "skillflow-runtime-v2";
+const CACHE_NAME = "skillflow-shell-v3";
+const RUNTIME_CACHE = "skillflow-runtime-v3";
 const APP_SCOPE = new URL(self.registration.scope);
 const normalizeScopedPath = (path = "./") => {
   if (typeof path !== "string") return "./";
@@ -133,7 +133,37 @@ self.addEventListener("notificationclick", (event) => {
 });
 
 self.addEventListener("message", (event) => {
-  if (event.data && event.data.type === "SKIP_WAITING") {
+  const data = event.data || {};
+
+  if (data.type === "SKIP_WAITING") {
     self.skipWaiting();
+    return;
+  }
+
+  if (data.type === "SHOW_NOTIFICATION") {
+    const payload = data.payload || {};
+    const title = payload.title || "Skillflow";
+    const options = {
+      body: payload.body || "Session update",
+      icon: resolveAssetUrl(payload.icon || "./icons/icon-192.png"),
+      badge: resolveAssetUrl(payload.badge || "./icons/icon-192.png"),
+      tag: payload.tag || `skillflow-manual-${Date.now()}`,
+      renotify: true,
+      data: payload.data || { url: "./#home" }
+    };
+
+    const respond = (msg) => {
+      if (event.ports && event.ports[0]) {
+        try { event.ports[0].postMessage(msg); } catch {}
+      }
+    };
+
+    event.waitUntil(
+      self.registration.showNotification(title, options)
+        .then(() => respond({ ok: true }))
+        .catch((err) => {
+          respond({ ok: false, error: err && err.message ? err.message : String(err) });
+        })
+    );
   }
 });

@@ -21,7 +21,7 @@
 
 <link rel="stylesheet" href="./styles.css?v=20260320b"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
-<link rel="manifest" href="./manifest.webmanifest?v=20260320d"/>
+<link rel="manifest" href="./manifest.webmanifest?v=20260320e"/>
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
 
 <style id="index-overrides">
@@ -1737,7 +1737,7 @@ async function ensureServiceWorkerReady(){
   if(!('serviceWorker' in navigator) || !window.isSecureContext) return null;
   if(swRegistration) return swRegistration;
   try{
-    const reg = await navigator.serviceWorker.register('./sw.js', { scope:'./', updateViaCache:'none' });
+    const reg = await navigator.serviceWorker.register('./sw.js?v=20260320e', { scope:'./', updateViaCache:'none' });
     swRegistration = reg;
     navigator.serviceWorker.addEventListener('controllerchange', ()=>{ swRegistration = null; });
     const ready = await navigator.serviceWorker.ready;
@@ -2742,11 +2742,24 @@ async function sendNotify(title, body){
       data:{ url:'./#home' }
     };
 
-    // Foreground notifications are more reliable via the page Notification API on iPhone.
-    if(document.visibilityState === 'visible'){
+    // Ask the active service worker to show the notification first.
+    const activeSw = navigator.serviceWorker?.controller || swRegistration?.active || swRegistration?.waiting || swRegistration?.installing;
+    if(activeSw && window.MessageChannel){
       try{
-        new Notification(title, options);
-        return true;
+        const result = await new Promise((resolve)=>{
+          const channel = new MessageChannel();
+          const done = (value)=>{ try{ channel.port1.close(); }catch{} resolve(value); };
+          const timer = window.setTimeout(()=> done(null), 1800);
+          channel.port1.onmessage = (event)=>{
+            window.clearTimeout(timer);
+            done(event?.data || null);
+          };
+          activeSw.postMessage({
+            type:'SHOW_NOTIFICATION',
+            payload:{ title, ...options }
+          }, [channel.port2]);
+        });
+        if(result?.ok) return true;
       }catch{}
     }
 
@@ -2756,6 +2769,8 @@ async function sendNotify(title, body){
         return true;
       }catch{}
     }
+
+    // Final fallback to the page Notification API.
     new Notification(title, options);
     return true;
   }catch{}
