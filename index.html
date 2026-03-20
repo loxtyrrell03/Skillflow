@@ -570,6 +570,15 @@ vertical-align: middle;
 
             </div>
 
+            <div class="home-saved-filter-row">
+              <label class="home-saved-filter">
+                <span class="home-saved-filter-label">Folder</span>
+                <select id="homeSavedFolderSelect" class="input home-saved-filter-select" aria-label="Choose saved outlines folder">
+                  <option value="">Root</option>
+                </select>
+              </label>
+            </div>
+
             <div id="homeSavedScroller" class="mt-2 flex gap-2 overflow-x-auto p-2 rounded-xl border border-[var(--border)] bg-[var(--panel)]"></div>
 
           </div>
@@ -1506,6 +1515,10 @@ let prefs = loadJSON('prefs_v1') || {
 };
 let savedOutlines = loadJSON('saved_outlines_v1') || [];
 let savedFolders = loadJSON('outline_folders_v1') || []; // {id, name}
+const LAST_USED_OUTLINE_FOLDER_KEY = 'last_used_outline_folder_v1';
+let preferredFolderId = loadJSON(LAST_USED_OUTLINE_FOLDER_KEY);
+if(typeof preferredFolderId !== 'string') preferredFolderId = null;
+let currentFolderId = preferredFolderId && savedFolders.some(f => f.id === preferredFolderId) ? preferredFolderId : null;
 let timerState = loadJSON('timer_state_v2') || { sessionStarted:false, running:false, currentIndex:0, secondsLeft:0, outlineId:null, lastSyncTs:0, awaitingNext:false };
 // AI generation preferences
 let aiPrefs = loadJSON('ai_prefs_v1') || { includeDescriptions:true, includeLinks:true, includeSubsections:true, maxLinksPerSection: 5, model:'gpt-5-mini' };
@@ -1742,7 +1755,7 @@ function showTab(id, skipHash){
   });
 
   if(id==='overviewTab'){ if(window.renderOverviewSchedule) window.renderOverviewSchedule(); }
-  if(id==='savedTab'){ renderSavedOutlines(); renderFoldersUI(); }
+  if(id==='savedTab'){ renderFoldersUI(); renderSavedOutlines(); }
   if(id==='homeTab') { renderHomeSavedBar(); if(window.renderSessionSchedule) window.renderSessionSchedule(); }
   if(id==='calendarTab'){ if(window.renderCalendar) window.renderCalendar(); }
   if(id==='pricingTab'){
@@ -3820,16 +3833,77 @@ function syncCurrentFromSaved(outlineObj){
 /*************** Saved Outlines wiring (+folders) ***************/
 
 const homeSavedScroller = $('#homeSavedScroller');
+const homeSavedFolderSelect = $('#homeSavedFolderSelect');
+
+function normalizeCurrentFolderId(nextId){
+  const normalized = (typeof nextId === 'string' && nextId) ? nextId : null;
+  return normalized && savedFolders.some(f => f.id === normalized) ? normalized : null;
+}
+
+function persistCurrentFolderId(){
+  saveJSON(LAST_USED_OUTLINE_FOLDER_KEY, preferredFolderId || null);
+}
+
+function ensureCurrentFolderId(){
+  const normalized = normalizeCurrentFolderId(preferredFolderId);
+  if(normalized === currentFolderId) return false;
+  currentFolderId = normalized;
+  return true;
+}
+
+function setCurrentFolderId(nextId, { renderFolders=false, renderSaved=false, renderHome=true } = {}){
+  const normalized = normalizeCurrentFolderId(nextId);
+  const changed = normalized !== currentFolderId;
+  currentFolderId = normalized;
+  preferredFolderId = normalized;
+  persistCurrentFolderId();
+  if(renderFolders && typeof renderFoldersUI === 'function') renderFoldersUI();
+  if(renderSaved){
+    try{ renderSavedOutlines(); }catch{}
+  }
+  if(renderHome) renderHomeSavedBar();
+  return changed;
+}
+
+function getHomeFolderOptions(){
+  const options = [{ id:'', label:'Root' }];
+  const walk = (parentId, trail, seen)=>{
+    savedFolders
+      .filter(f => (f.parentId || null) === parentId)
+      .forEach(f => {
+        if(seen.has(f.id)) return;
+        const nextSeen = new Set(seen);
+        nextSeen.add(f.id);
+        const label = trail ? `${trail} / ${f.name || 'Folder'}` : (f.name || 'Folder');
+        options.push({ id:f.id, label });
+        walk(f.id, label, nextSeen);
+      });
+  };
+  walk(null, '', new Set());
+  return options;
+}
 
 function renderHomeSavedBar(){
 
+  ensureCurrentFolderId();
   const activeId = (timerState && timerState.outlineId) || null;
+  const visibleOutlines = savedOutlines.filter(o => (currentFolderId ? o.folderId === currentFolderId : !o.folderId));
+
+  if(homeSavedFolderSelect){
+    homeSavedFolderSelect.innerHTML = getHomeFolderOptions().map(opt => `
+      <option value="${escapeHtml(opt.id)}" ${opt.id === (currentFolderId || '') ? 'selected' : ''}>${escapeHtml(opt.label)}</option>
+    `).join('');
+    homeSavedFolderSelect.value = currentFolderId || '';
+    homeSavedFolderSelect.onchange = ()=>{
+      setCurrentFolderId(homeSavedFolderSelect.value || null, { renderFolders:true, renderSaved:true, renderHome:true });
+    };
+  }
 
   homeSavedScroller.innerHTML =
 
-  (savedOutlines.length
+  (visibleOutlines.length
 
-    ? savedOutlines.map(o=>`
+    ? visibleOutlines.map(o=>`
 
       <button type="button" class="chip ${o.id===activeId ? 'chip-active' : ''}" data-oid="${escapeHtml(o.id)}" title="${escapeHtml(o.title || 'Outline')}">
 
@@ -3837,7 +3911,7 @@ function renderHomeSavedBar(){
 
       </button>`).join('')
 
-    : `<div class="text-xs muted">No saved outlines yet.</div>`);
+    : `<div class="text-xs muted">${currentFolderId || savedOutlines.length ? 'No saved outlines in this folder yet.' : 'No saved outlines yet.'}</div>`);
 
   homeSavedScroller.querySelectorAll('[data-oid]').forEach(btn=>{
 
@@ -5440,11 +5514,6 @@ if(createOutlineFromHome){
 }
 
 
-
-let currentFolderId = null;
-
-
-
 // Replace the "+ New folder" button with its popover while open (prevents layout shift)
 
 createFolderBtn.onclick = ()=>{
@@ -5476,6 +5545,7 @@ createFolderConfirm.onclick = ()=>{
 function renderFoldersUI(){
 
   if(!folderCrumbs || !folderGrid) return;
+  ensureCurrentFolderId();
 
   // Breadcrumbs
 
@@ -5485,7 +5555,7 @@ function renderFoldersUI(){
 
   if(currentFolderId===null) main.classList.add('active');
 
-  main.onclick = ()=>{ currentFolderId=null; renderFoldersUI(); renderSavedOutlines(); };
+  main.onclick = ()=>{ setCurrentFolderId(null, { renderFolders:true, renderSaved:true, renderHome:true }); };
 
   folderCrumbs.appendChild(main);
 
@@ -5509,9 +5579,9 @@ function renderFoldersUI(){
 
     folderCrumbs.innerHTML='';
 
-    const mainCr=document.createElement('span'); mainCr.className='crumb'; mainCr.textContent='Main'; mainCr.dataset.fid=''; if(currentFolderId===null) mainCr.classList.add('active'); mainCr.onclick=()=>{ currentFolderId=null; renderFoldersUI(); renderSavedOutlines(); }; folderCrumbs.appendChild(mainCr);
+    const mainCr=document.createElement('span'); mainCr.className='crumb'; mainCr.textContent='Main'; mainCr.dataset.fid=''; if(currentFolderId===null) mainCr.classList.add('active'); mainCr.onclick=()=>{ setCurrentFolderId(null, { renderFolders:true, renderSaved:true, renderHome:true }); }; folderCrumbs.appendChild(mainCr);
 
-    path.forEach((f, idx)=>{ const sep=document.createElement('span'); sep.className='crumb-sep'; sep.textContent='>'; folderCrumbs.appendChild(sep); const c=document.createElement('span'); c.className='crumb'; c.textContent=f.name; c.dataset.fid=f.id; if(idx===path.length-1) c.classList.add('active'); c.onclick=()=>{ currentFolderId=f.id; renderFoldersUI(); renderSavedOutlines(); }; folderCrumbs.appendChild(c); });
+    path.forEach((f, idx)=>{ const sep=document.createElement('span'); sep.className='crumb-sep'; sep.textContent='>'; folderCrumbs.appendChild(sep); const c=document.createElement('span'); c.className='crumb'; c.textContent=f.name; c.dataset.fid=f.id; if(idx===path.length-1) c.classList.add('active'); c.onclick=()=>{ setCurrentFolderId(f.id, { renderFolders:true, renderSaved:true, renderHome:true }); }; folderCrumbs.appendChild(c); });
 
   }catch{}
 
@@ -5636,7 +5706,7 @@ function renderFoldersUI(){
 
     }catch{}
 
-    card.addEventListener('click', (e)=>{ if(e.target.closest('[data-act]')) return; currentFolderId = card.dataset.fid; renderFoldersUI(); renderSavedOutlines(); });
+    card.addEventListener('click', (e)=>{ if(e.target.closest('[data-act]')) return; setCurrentFolderId(card.dataset.fid, { renderFolders:true, renderSaved:true, renderHome:true }); });
 
     // Allow dropping outline onto folder
 
@@ -5682,7 +5752,7 @@ function renderFoldersUI(){
 
       if(i>=0){ savedFolders.splice(i,1); saveFoldersLocal(); }
 
-      renderFoldersUI(); renderSavedOutlines();
+      setCurrentFolderId(currentFolderId, { renderFolders:true, renderSaved:true, renderHome:true });
 
     });
 
@@ -5694,7 +5764,7 @@ function renderFoldersUI(){
 
 // Expose for Saved Outlines module to query current folder
 
-window.__getCurrentFolderId = ()=> currentFolderId;
+window.__getCurrentFolderId = ()=>{ ensureCurrentFolderId(); return currentFolderId; };
 
 renderFoldersUI();
 

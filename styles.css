@@ -251,6 +251,39 @@ body.is-phone.drawer-open #mobileNavOverlay{ opacity:0; pointer-events:none; }
   flex: none;            /* no grow/shrink; keep intrinsic width */
   white-space: nowrap;   /* prevent wrapping that would change height/width */
 }
+.home-saved-filter-row{
+  margin-top:.65rem;
+}
+.home-saved-filter{
+  display:flex;
+  align-items:center;
+  gap:.6rem;
+  min-width:0;
+}
+.home-saved-filter-label{
+  flex:none;
+  font-size:.72rem;
+  font-weight:700;
+  color:var(--muted);
+  letter-spacing:.02em;
+  text-transform:uppercase;
+}
+.home-saved-filter-select{
+  flex:1 1 auto;
+  min-width:0;
+  padding:.58rem .8rem;
+  font-size:.9rem;
+}
+@media (max-width:980px){
+  .home-saved-filter{
+    align-items:flex-start;
+    flex-direction:column;
+    gap:.35rem;
+  }
+  .home-saved-filter-select{
+    width:100%;
+  }
+}
 
 
 .link-card{
