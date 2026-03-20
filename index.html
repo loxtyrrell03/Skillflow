@@ -1877,26 +1877,32 @@ async function syncSectionAlertForCurrentState(){
 
 const queueSectionAlertSync = debounce(()=>{ syncSectionAlertForCurrentState(); }, 260);
 
-async function sendPushTestNotification(){
+async function deliverDeviceNotification(preview, opts = {}){
+  const { force = false, showSuccessToast = false, toastOnMissingInstall = false } = opts;
+  if(!force && !prefs.notifyEnabled) return false;
   if(typeof Notification === 'undefined' || Notification.permission !== 'granted'){
-    showToast('Allow notifications first.','error');
-    return;
+    if(showSuccessToast) showToast('Allow notifications first.','error');
+    return false;
   }
 
-  await ensureBestNotificationChannel({ toastOnMissingInstall:true });
-  const preview = currentSectionNotificationParts();
+  await ensureBestNotificationChannel({ toastOnMissingInstall });
 
   if(currentUser){
     try{
       await sendPushTestFn({ title: preview.title, body: preview.body });
-      showToast('Sent a phone test notification.','success');
-      return;
+      if(showSuccessToast) showToast('Sent a phone test notification.','success');
+      return true;
     }catch(err){
       console.warn('Remote push test failed', err);
     }
   }
 
-  sendNotify(preview.title, preview.body);
+  return await sendNotify(preview.title, preview.body);
+}
+
+async function sendPushTestNotification(){
+  const preview = currentSectionNotificationParts();
+  return await deliverDeviceNotification(preview, { force:true, showSuccessToast:true, toastOnMissingInstall:true });
 }
 
 
@@ -2478,10 +2484,8 @@ function tick(){
   if(secondsLeft <= 0){
 
     if(currentIndex < currentSession.length - 1){
-      try{
-        const notification = currentSectionNotificationParts();
-        sendNotify(notification.title, notification.body);
-      }catch{}
+      const notification = currentSectionNotificationParts();
+      deliverDeviceNotification(notification, { toastOnMissingInstall:false }).catch(()=>{});
       stopTimer();
 
       awaitingNext = true;
@@ -2505,7 +2509,7 @@ function tick(){
 
       sessionStarted = false;
       updateStartBtnLabel();
-      try{ sendNotify(completionNotice.title, completionNotice.body); }catch{}
+      deliverDeviceNotification(completionNotice, { toastOnMissingInstall:false }).catch(()=>{});
       markTimer();
 
       showToast('Session complete! 🎉','success', 3500);
