@@ -2488,7 +2488,7 @@ function tick(){
 
       showNextGate();
 
-      tone(); // use prefs
+      playAttentionTone();
 
       markTimer();
 
@@ -2501,7 +2501,7 @@ function tick(){
 
       stopTimer();
 
-      tone();
+      playAttentionTone();
 
       sessionStarted = false;
       updateStartBtnLabel();
@@ -2731,21 +2731,35 @@ function disableNotifications(){
   refreshPhoneNotificationCard();
 }
 function updateNotifyBtn(){ /* legacy button removed */ }
-function sendNotify(title, body){
+async function sendNotify(title, body){
   try{
     if(!prefs.notifyEnabled || !canNotify() || Notification.permission!=='granted') return;
-    if(swRegistration && typeof swRegistration.showNotification === 'function'){
-      swRegistration.showNotification(title, {
-        body,
-        icon:'./icons/icon-192.png',
-        badge:'./icons/icon-192.png',
-        tag:`skillflow-inline-${Date.now()}`,
-        data:{ url:'./#home' }
-      }).catch(()=>{});
-      return;
+    const options = {
+      body,
+      icon:'./icons/icon-192.png',
+      badge:'./icons/icon-192.png',
+      tag:`skillflow-inline-${Date.now()}`,
+      data:{ url:'./#home' }
+    };
+
+    // Foreground notifications are more reliable via the page Notification API on iPhone.
+    if(document.visibilityState === 'visible'){
+      try{
+        new Notification(title, options);
+        return true;
+      }catch{}
     }
-    new Notification(title, { body, icon:'./icons/icon-192.png' });
+
+    if(swRegistration && typeof swRegistration.showNotification === 'function'){
+      try{
+        await swRegistration.showNotification(title, options);
+        return true;
+      }catch{}
+    }
+    new Notification(title, options);
+    return true;
   }catch{}
+  return false;
 }
 function updateFocusProgress(){
 
@@ -5150,6 +5164,23 @@ function playTone(type='beep', duration=0.6, volume=0.5){
 }
 
 function tone(){ playTone(prefs.audio?.tone || 'beep', Number(prefs.audio?.duration || 0.6), Number(prefs.audio?.volume || 0.5)); }
+
+function playAttentionTone(){
+  tone();
+  if(document.visibilityState !== 'visible') return;
+  const followUps = [420, 900];
+  followUps.forEach((delay, idx)=>{
+    window.setTimeout(()=>{
+      try{
+        playTone(
+          prefs.audio?.tone || 'beep',
+          Math.max(0.18, Number(prefs.audio?.duration || 0.6) * (idx === 0 ? 0.8 : 0.65)),
+          Math.min(1, Number(prefs.audio?.volume || 0.5) + 0.08)
+        );
+      }catch{}
+    }, delay);
+  });
+}
 
 
 
