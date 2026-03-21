@@ -136,19 +136,26 @@ body.is-phone #navToggle{display:inline-flex; align-items:center; justify-conten
 
 .topnav-links{flex:1 1 auto; justify-content:center; min-width:0}
 .topbar-actions{display:flex; align-items:center; gap:.6rem; flex:0 0 auto}
+.topbar-actions .sf-btn{
+  min-height:38px;
+  padding:.6rem .9rem;
+  font-size:.88rem;
+  border-radius:13px;
+}
 .topbar-schedule-summary{
   min-width:0;
-  max-width:300px;
+  max-width:260px;
   justify-content:flex-start;
-  padding-inline:.9rem 1rem;
+  padding-inline:.8rem .9rem;
 }
 .topbar-schedule-kicker{
-  font-size:.68rem;
+  font-size:.62rem;
   letter-spacing:.14em;
   text-transform:uppercase;
   color:var(--accent-600);
 }
 .topbar-schedule-text{
+  font-size:.82rem;
   min-width:0;
   overflow:hidden;
   text-overflow:ellipsis;
@@ -166,14 +173,50 @@ body.overview-active #cloudStatus{
   display:none !important;
 }
 
-@media (max-width:1240px){
+@media (max-width:1720px){
   body:not(.is-phone) .topbar{
     flex-wrap:wrap;
+    row-gap:12px;
   }
   body:not(.is-phone) .topnav-links{
     order:3;
     flex:1 0 100%;
     justify-content:flex-start;
+  }
+  body:not(.is-phone) .topbar-actions{
+    margin-left:auto;
+    gap:.45rem;
+    flex-wrap:wrap;
+    justify-content:flex-end;
+  }
+}
+
+@media (max-width:1480px){
+  body:not(.is-phone) .topbar{
+    padding-inline:16px;
+  }
+  body:not(.is-phone) .topbar-actions .sf-btn{
+    min-height:34px;
+    padding:.52rem .78rem;
+    font-size:.82rem;
+  }
+  body:not(.is-phone) .topbar-schedule-summary{
+    max-width:220px;
+  }
+  body:not(.is-phone) .topbar-schedule-kicker{
+    font-size:.58rem;
+  }
+  body:not(.is-phone) .topbar-schedule-text{
+    font-size:.78rem;
+  }
+  body:not(.is-phone) .topbar-actions{
+    gap:.35rem;
+  }
+}
+
+@media (max-width:1240px){
+  body:not(.is-phone) .topnav-links{
+    overflow-x:auto;
   }
 }
 
