@@ -206,6 +206,11 @@
     return window.skillflowBridge || null;
   }
 
+  function isSavedTabVisible() {
+    const savedTab = $('#savedTab');
+    return !!savedTab && !savedTab.classList.contains('hidden');
+  }
+
   function parseDateValue(dateStr) {
     return new Date(`${dateStr}T00:00:00`);
   }
@@ -600,18 +605,21 @@
 
   // Save calendar events to global state
   function saveCalendarEvents(events) {
+    const nextEvents = Array.isArray(events) ? events : [];
     const bridge = getAppBridge();
     if (bridge?.setCalendarEvents) {
-      bridge.setCalendarEvents(Array.isArray(events) ? events : []);
+      bridge.setCalendarEvents(nextEvents);
+      syncOutlineScheduleInfo(nextEvents, { renderSaved: isSavedTabVisible() });
       return;
     }
-    window.calendarEvents = events;
+    window.calendarEvents = nextEvents;
     try {
-      localStorage.setItem('calendar_events_v1', JSON.stringify(events));
+      localStorage.setItem('calendar_events_v1', JSON.stringify(nextEvents));
       if (window.markDirty) window.markDirty();
     } catch (e) {
       console.error('Failed to save calendar events:', e);
     }
+    syncOutlineScheduleInfo(nextEvents, { renderSaved: isSavedTabVisible() });
   }
 
   // Get saved outlines from global state
@@ -721,6 +729,118 @@
 
   function sortEventsChronologically(events) {
     return [...events].sort(compareEventsChronologically);
+  }
+
+  function describeScheduledEvent(event) {
+    if (!event) return '';
+    const parts = [];
+    if (event.recurrence) {
+      parts.push(formatRecurrenceSummary(event.recurrence, event.date));
+    } else if (event.date) {
+      parts.push(formatShortDate(parseDateValue(event.date)));
+    }
+    if (event.allDay) {
+      parts.push('All day');
+    } else if (event.time) {
+      parts.push(formatTime(event.time));
+    }
+    return parts.join(' • ');
+  }
+
+  function buildOutlineScheduleInfo(outlineId, events = getCalendarEvents()) {
+    const linkedEvents = sortEventsChronologically(
+      (Array.isArray(events) ? events : []).filter((event) => event.outlineId === outlineId)
+    );
+    if (!linkedEvents.length) return null;
+
+    const now = Date.now();
+    const primaryEvent = linkedEvents.find((event) => getEventEndDateTime(event).getTime() >= now) || linkedEvents[0];
+    const entries = linkedEvents.map((event) => ({
+      eventId: event.id,
+      date: event.date,
+      endDate: event.endDate || null,
+      time: event.time || null,
+      endTime: event.endTime || null,
+      allDay: !!event.allDay,
+      calendarId: event.calendarId || 'cal_default',
+      notes: event.notes || '',
+      recurrence: event.recurrence ? structuredClone(event.recurrence) : null,
+      summary: describeScheduledEvent(event)
+    }));
+
+    return {
+      primaryEventId: primaryEvent.id,
+      eventIds: entries.map((entry) => entry.eventId),
+      summary: entries.length === 1 ? entries[0].summary : `${entries.length} scheduled blocks`,
+      events: entries
+    };
+  }
+
+  function syncOutlineScheduleInfo(events = getCalendarEvents(), { renderSaved = false } = {}) {
+    const bridge = getAppBridge();
+    const outlines = getSavedOutlines();
+    if (!Array.isArray(outlines)) return;
+
+    let changed = false;
+    const nextOutlines = outlines.map((outline) => {
+      const nextScheduleInfo = buildOutlineScheduleInfo(outline.id, events);
+      const currentSignature = JSON.stringify(outline.scheduleInfo || null);
+      const nextSignature = JSON.stringify(nextScheduleInfo || null);
+      if (currentSignature === nextSignature) return outline;
+
+      changed = true;
+      if (!nextScheduleInfo) {
+        const { scheduleInfo, ...rest } = outline;
+        return rest;
+      }
+      return { ...outline, scheduleInfo: nextScheduleInfo };
+    });
+
+    if (!changed) return;
+
+    if (bridge?.setSavedOutlines) {
+      bridge.setSavedOutlines(nextOutlines, {
+        persistLocal: true,
+        syncCloud: false,
+        renderSaved,
+        renderHome: true,
+        renderSchedule: true
+      });
+      return;
+    }
+
+    window.savedOutlines = nextOutlines;
+    try {
+      localStorage.setItem('saved_outlines_v1', JSON.stringify(nextOutlines));
+      if (window.markDirty) window.markDirty();
+    } catch (error) {
+      console.error('Failed to sync outline schedule info:', error);
+    }
+  }
+
+  function getOutlineScheduleEventId(outlineId) {
+    if (!outlineId) return null;
+
+    const outline = getOutlineById(outlineId);
+    const scheduleInfo = outline?.scheduleInfo || buildOutlineScheduleInfo(outlineId);
+    const primaryId = scheduleInfo?.primaryEventId;
+    if (primaryId && getCalendarEvents().some((event) => event.id === primaryId)) {
+      return primaryId;
+    }
+
+    const linkedEvents = sortEventsChronologically(
+      getCalendarEvents().filter((event) => event.outlineId === outlineId)
+    );
+    return linkedEvents[0]?.id || null;
+  }
+
+  function openOutlineScheduleModal(outlineId, preselectedDate = null) {
+    const linkedEventId = getOutlineScheduleEventId(outlineId);
+    if (linkedEventId) {
+      openEventModal(linkedEventId);
+      return;
+    }
+    openEventModal(null, preselectedDate, outlineId);
   }
 
   function getEventKey(event) {
@@ -864,6 +984,14 @@
 
   function renderTodaySchedule() {
     const snapshot = getAgendaSnapshot();
+    const card = $('#todayScheduleCard');
+    const topRow = $('.calendar-top-row');
+    if (!snapshot.todayEvents.length) {
+      if (card) card.style.display = 'none';
+      if (topRow) topRow.classList.add('calendar-top-row-single');
+      return;
+    }
+    if (topRow) topRow.classList.remove('calendar-top-row-single');
     renderScheduleSection({
       cardSelector: '#todayScheduleCard',
       listSelector: '#todayScheduleList',
@@ -1467,6 +1595,14 @@
 
   function renderTodaySchedule() {
     const snapshot = getAgendaSnapshot();
+    const card = $('#todayScheduleCard');
+    const topRow = $('.calendar-top-row');
+    if (!snapshot.todayEvents.length) {
+      if (card) card.style.display = 'none';
+      if (topRow) topRow.classList.add('calendar-top-row-single');
+      return;
+    }
+    if (topRow) topRow.classList.remove('calendar-top-row-single');
     renderScheduleSection({
       cardSelector: '#todayScheduleCard',
       listSelector: '#todayScheduleList',
@@ -1681,6 +1817,38 @@
     return nextRecurrence;
   }
 
+  function alignDateToRecurrence(dateStr, recurrence) {
+    if (!dateStr || !recurrence) return dateStr;
+    const normalized = normalizeRecurrence(recurrence, dateStr);
+    if (normalized.unit !== 'weeks' || !normalized.weekdays.length) return dateStr;
+
+    const baseDate = parseDateValue(dateStr);
+    const currentWeekday = baseDate.getDay();
+    if (normalized.weekdays.includes(currentWeekday)) return dateStr;
+
+    const nextWeekday = normalized.weekdays.find((weekday) => weekday > currentWeekday);
+    const daysToAdd = typeof nextWeekday === 'number'
+      ? nextWeekday - currentWeekday
+      : (7 - currentWeekday) + normalized.weekdays[0];
+
+    return formatDateStr(addDays(baseDate, daysToAdd));
+  }
+
+  function alignDateInputToRecurrence() {
+    const { dateInput } = getModalElements();
+    if (!dateInput?.value) return false;
+
+    const recurrence = buildDraftRecurrence();
+    if (!recurrence) return false;
+
+    const alignedDate = alignDateToRecurrence(dateInput.value, recurrence);
+    if (alignedDate === dateInput.value) return false;
+
+    dateInput.value = alignedDate;
+    modalState.activeQuickDate = '';
+    return true;
+  }
+
   function updateEventPreview() {
     const {
       select,
@@ -1702,13 +1870,16 @@
     const duration = Math.max(15, getTotalDuration(outline.sections));
     const sectionCount = Array.isArray(outline.sections) ? outline.sections.length : 0;
     const scheduleParts = [];
-    if (dateInput?.value) scheduleParts.push(formatLongDate(parseDateValue(dateInput.value)));
+    const draftRecurrence = buildDraftRecurrence();
+    const previewDate = dateInput?.value
+      ? alignDateToRecurrence(dateInput.value, draftRecurrence)
+      : '';
+    if (previewDate) scheduleParts.push(formatLongDate(parseDateValue(previewDate)));
     if (allDayInput?.checked) {
       scheduleParts.push('All day');
     } else if (timeInput?.value) {
       scheduleParts.push(`${formatTime(timeInput.value)}${endTimeInput?.value ? ` - ${formatTime(endTimeInput.value)}` : ''}`);
     }
-    const draftRecurrence = buildDraftRecurrence();
     if (draftRecurrence) scheduleParts.push(formatRecurrenceSummary(draftRecurrence, dateInput?.value));
 
     previewContent.innerHTML = `
@@ -1848,19 +2019,21 @@
     }
 
     const recurrence = buildDraftRecurrence();
+    const alignedDate = alignDateToRecurrence(date, recurrence);
+    if (alignedDate !== date) dateInput.value = alignedDate;
     const calId = calendarSelect?.value || 'cal_default';
     const cal = getCalendarById(calId);
     const events = [...getCalendarEvents()];
-    const nextEndDate = endDateInput?.value && parseDateValue(endDateInput.value) >= parseDateValue(date)
+    const nextEndDate = endDateInput?.value && parseDateValue(endDateInput.value) >= parseDateValue(alignedDate)
       ? endDateInput.value
       : null;
-    const resolvedStartTime = allDayInput?.checked ? null : (timeInput.value || getSuggestedStartTime(date));
+    const resolvedStartTime = allDayInput?.checked ? null : (timeInput.value || getSuggestedStartTime(alignedDate));
     const resolvedEndTime = allDayInput?.checked
       ? null
       : (endTimeInput.value || addMinutesToTime(resolvedStartTime, Math.max(15, getTotalDuration(outline.sections))));
     const eventData = {
       outlineId,
-      date,
+      date: alignedDate,
       endDate: nextEndDate,
       time: resolvedStartTime,
       endTime: resolvedEndTime,
@@ -2636,6 +2809,7 @@
         if (isWeekdayRecurrence && !modalState.manualWeekdays) {
           setSelectedWeekdays([parseDateValue(dateInput.value).getDay()]);
         }
+        alignDateInputToRecurrence();
         applySuggestedTiming({ forceDate: true, forceTime: true });
         syncRecurrenceUi();
         updateEventPreview();
@@ -2661,6 +2835,11 @@
           modalState.manualWeekdays = true;
         } else {
           weekdayBtn.classList.toggle('is-selected');
+        }
+        const { timeInput } = getModalElements();
+        const didAlignDate = alignDateInputToRecurrence();
+        if (didAlignDate) {
+          applySuggestedTiming({ forceDate: true, forceTime: !timeInput?.value });
         }
         updateEventPreview();
       }
@@ -2707,7 +2886,8 @@
         if (isWeekdayRecurrence && !modalState.manualWeekdays && dateInput.value) {
           setSelectedWeekdays([parseDateValue(dateInput.value).getDay()]);
         }
-        applySuggestedTiming({ forceDate: false, forceTime: !timeInput?.value });
+        const didAlignDate = alignDateInputToRecurrence();
+        applySuggestedTiming({ forceDate: didAlignDate, forceTime: !timeInput?.value });
         syncRecurrenceUi();
         updateEventPreview();
       });
@@ -2736,12 +2916,16 @@
       recurrenceInput.addEventListener('change', () => {
         modalState.manualWeekdays = false;
         syncRecurrenceUi();
+        const didAlignDate = alignDateInputToRecurrence();
+        applySuggestedTiming({ forceDate: didAlignDate, forceTime: !timeInput?.value });
         updateEventPreview();
       });
     }
     if (recurrenceUnit) {
       recurrenceUnit.addEventListener('change', () => {
         syncRecurrenceUi();
+        const didAlignDate = alignDateInputToRecurrence();
+        applySuggestedTiming({ forceDate: didAlignDate, forceTime: !timeInput?.value });
         updateEventPreview();
       });
     }
@@ -2928,6 +3112,7 @@
     renderCalendarList();
     renderMiniCalendar();
     renderCalendar();
+    syncOutlineScheduleInfo(getCalendarEvents(), { renderSaved: isSavedTabVisible() });
     renderScheduleSurfaces();
     if (modalState.clockRefresh) clearInterval(modalState.clockRefresh);
     modalState.clockRefresh = setInterval(() => {
@@ -2939,6 +3124,8 @@
   window.renderCalendar = renderCalendar;
   window.openEventModal = openEventModal;
   window.startEventSession = startEventSession;
+  window.openOutlineScheduleModal = openOutlineScheduleModal;
+  window.syncOutlineScheduleInfo = syncOutlineScheduleInfo;
   window.updateEventPreview = updateEventPreview;
   window.renderOverviewSchedule = renderOverviewSchedule;
   window.renderSessionSchedule = renderSessionSchedule;

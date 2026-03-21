@@ -2180,10 +2180,45 @@ body.is-phone .modal-panel{
   to{ width:78%; opacity:1; }
 }
 
+.overview-secondary-grid{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(280px, 340px);
+  gap:18px;
+  align-items:start;
+}
 .landing-rail{
   display:grid;
   grid-template-columns:repeat(3, minmax(0, 1fr));
   gap:18px;
+}
+.overview-schedule-card{
+  display:grid;
+  gap:12px;
+  padding:18px;
+  align-self:start;
+}
+.overview-schedule-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+}
+.overview-schedule-list{
+  display:grid;
+  gap:10px;
+}
+.overview-schedule-card .block-title{
+  font-size:1.08rem;
+  line-height:1.18;
+}
+.overview-schedule-card .schedule-item-rich{
+  padding:10px 12px;
+}
+.overview-schedule-card .schedule-actions{
+  display:none;
+}
+.overview-schedule-card .schedule-empty-state{
+  padding:14px;
 }
 .feature.card{padding:22px 20px}
 .feature-simple{
@@ -2244,6 +2279,9 @@ body.is-phone .modal-panel{
 }
 @media (max-width:1000px){
   .landing-hero{
+    grid-template-columns:1fr;
+  }
+  .overview-secondary-grid{
     grid-template-columns:1fr;
   }
   .landing-band{
@@ -2357,7 +2395,7 @@ body.is-phone #focusOverlay > .relative{
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
-  gap: 10px;
+  gap: 6px;
 }
 
 .calendar-header {
@@ -2374,10 +2412,10 @@ body.is-phone #focusOverlay > .relative{
 }
 
 .cal-day {
-  aspect-ratio: 1;
+  aspect-ratio: auto;
   border: 1px solid color-mix(in srgb, var(--line) 84%, white);
   border-radius: 18px;
-  padding: 10px 8px;
+  padding: 7px 5px;
   cursor: pointer;
   transition: all var(--fast) var(--ease);
   background: linear-gradient(180deg, rgba(255,255,255,.96), rgba(239,246,255,.8));
@@ -2386,7 +2424,7 @@ body.is-phone #focusOverlay > .relative{
   align-items: center;
   justify-content: flex-start;
   position: relative;
-  min-height: 92px;
+  min-height: clamp(70px, 9.5dvh, 96px);
   box-shadow: 0 10px 24px rgba(15,23,42,.05);
 }
 
@@ -2767,9 +2805,27 @@ body.is-phone #focusOverlay > .relative{
   gap: 20px;
 }
 
+.calendar-top-row{
+  display:grid;
+  grid-template-columns:minmax(0, 1fr) minmax(280px, 340px);
+  gap:16px;
+  align-items:start;
+}
+
+.calendar-top-row.calendar-top-row-single{
+  grid-template-columns:1fr;
+}
+
+.calendar-grid-card{
+  overflow:visible;
+}
+
 @media (max-width: 900px) {
   .calendar-layout {
     grid-template-columns: 1fr;
+  }
+  .calendar-top-row{
+    grid-template-columns:1fr;
   }
   .calendar-sidebar {
     display: none;
@@ -3024,6 +3080,16 @@ body.is-phone #focusOverlay > .relative{
   min-height: 34px;
   padding: .5rem .8rem;
   font-size: .78rem;
+}
+#todayScheduleCard .block-title{
+  font-size:1.08rem;
+  line-height:1.18;
+}
+#todayScheduleCard .schedule-item-rich{
+  padding:10px 12px;
+}
+#todayScheduleCard .schedule-actions{
+  display:none;
 }
 .schedule-empty-state{
   display:grid;

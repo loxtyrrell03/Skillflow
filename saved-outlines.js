@@ -227,17 +227,20 @@ export function setupSavedOutlines({
       </div>`;
   }
 
-  function modernOutlineSummaryHtml(sections, isExpanded){
-    const preview = (sections || []).slice(0, 3).map(s=>`
+  function modernOutlineSummaryHtml(outline, isExpanded){
+    const sections = outline?.sections || [];
+    const scheduleSummary = outline?.scheduleInfo?.summary || '';
+    const preview = sections.slice(0, 3).map(s=>`
       <span class="saved-preview-chip">
         <span class="truncate">${escapeHtml(s.name || 'Untitled section')}</span>
         <span class="saved-preview-time">${fmtMins(s.minutes)}m</span>
       </span>`).join('');
-    const overflow = Math.max(0, (sections || []).length - 3);
+    const overflow = Math.max(0, sections.length - 3);
     return `
       <div class="saved-outline-meta">
-        <span class="saved-meta-pill">${pluralize((sections || []).length, 'section')}</span>
-        <span class="saved-meta-pill">${fmtMins(sumMinutes(sections || []))} min total</span>
+        <span class="saved-meta-pill">${pluralize(sections.length, 'section')}</span>
+        <span class="saved-meta-pill">${fmtMins(sumMinutes(sections))} min total</span>
+        ${scheduleSummary ? `<span class="saved-meta-pill saved-meta-pill-accent">Scheduled • ${escapeHtml(scheduleSummary)}</span>` : ''}
         ${isExpanded ? '<span class="saved-meta-pill saved-meta-pill-accent">Editor open</span>' : ''}
       </div>
       <div class="saved-outline-preview-list">
@@ -248,19 +251,20 @@ export function setupSavedOutlines({
 
   function modernOutlineCardHtml(o, isExpanded){
     const toggleLabel = isExpanded ? 'Close editor' : 'Edit outline';
+    const scheduleLabel = o?.scheduleInfo?.eventIds?.length ? 'Edit schedule' : 'Schedule';
     return `
       <div class="card saved-outline-card ${isExpanded ? 'is-expanded' : ''}" data-oid="${escapeHtml(o.id)}" draggable="false">
         <div class="saved-outline-head" data-role="outline-head">
           <div class="saved-outline-main">
             <div class="saved-outline-title" data-role="outline-title">${escapeHtml(o.title || 'Untitled outline')}</div>
-            ${modernOutlineSummaryHtml(o.sections || [], isExpanded)}
+            ${modernOutlineSummaryHtml(o, isExpanded)}
           </div>
 
           <div class="saved-outline-actions">
             <div class="saved-outline-actions-group">
               <button class="btn-xs saved-action saved-action-primary" data-act="toggle-expand" aria-expanded="${isExpanded ? 'true':'false'}" title="${toggleLabel}">${toggleLabel}</button>
               <button class="btn-xs saved-action" data-act="load">Load</button>
-              <button class="btn-xs saved-action" data-act="schedule">Schedule</button>
+              <button class="btn-xs saved-action" data-act="schedule">${scheduleLabel}</button>
             </div>
 
             <div class="saved-outline-actions-group saved-outline-actions-secondary">
@@ -429,10 +433,8 @@ export function setupSavedOutlines({
       card.querySelector('[data-act="load"]')?.addEventListener('click', ()=>{ if(!requireAuth()) return; applyOutline && applyOutline(o); goHome(); });
       card.querySelector('[data-act="schedule"]')?.addEventListener('click', ()=>{
         if(!requireAuth()) return;
-        if(window.openEventModal) {
-          // Open modal with this outline pre-selected
-          window.openEventModal(null, null, o.id);
-        }
+        if(window.openOutlineScheduleModal) window.openOutlineScheduleModal(o.id);
+        else if(window.openEventModal) window.openEventModal(null, null, o.id);
       });
       card.querySelector('[data-act="duplicate"]')?.addEventListener('click', async ()=>{
         if(!requireAuth()) return;

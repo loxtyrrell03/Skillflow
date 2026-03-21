@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com"></script>
 
-<link rel="stylesheet" href="./styles.css?v=20260321-home4"/>
+<link rel="stylesheet" href="./styles.css?v=20260321-schedule3"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
 <link rel="manifest" href="./manifest.webmanifest?v=20260320f"/>
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
@@ -318,45 +318,58 @@ vertical-align: middle;
 
 
 
-    <div class="landing-rail">
+    <div class="overview-secondary-grid">
+      <div class="landing-rail">
 
-      <section class="feature feature-simple card aurora-frame">
+        <section class="feature feature-simple card aurora-frame">
 
-        <div class="feature-kicker">Build</div>
+          <div class="feature-kicker">Build</div>
 
-        <h3 class="block-title">Outline the session</h3>
+          <h3 class="block-title">Outline the session</h3>
 
-        <p class="muted">Set the order, timing, links, and notes before you start.</p>
+          <p class="muted">Set the order, timing, links, and notes before you start.</p>
 
+        </section>
+
+
+
+        <section class="feature feature-simple card aurora-frame">
+
+          <div class="feature-kicker">Run</div>
+
+          <h3 class="block-title">Stay with the current step</h3>
+
+          <p class="muted">Use the timer and progress bar to keep the block moving.</p>
+
+        </section>
+
+
+
+        <section class="feature feature-simple card aurora-frame">
+
+          <div class="feature-kicker">Reuse</div>
+
+          <h3 class="block-title">Save it as an outline</h3>
+
+          <p class="muted">Bring good sessions back whenever you want them again.</p>
+
+        </section>
+
+      </div>
+
+      <!-- Today's Schedule Widget -->
+      <section id="overviewTodaySchedule" class="feature card aurora-frame overview-schedule-card" style="display:none;">
+        <div class="overview-schedule-head">
+          <div>
+            <div class="feature-kicker">Today</div>
+            <h3 class="block-title">Today's Schedule</h3>
+            <p id="overviewScheduleSubtitle" class="text-xs muted mt-1"></p>
+          </div>
+          <button class="text-xs underline" data-tab-jump="calendarTab" type="button">View Calendar →</button>
+        </div>
+        <div id="overviewScheduleList" class="overview-schedule-list"></div>
       </section>
-
-
-
-      <section class="feature feature-simple card aurora-frame">
-
-        <div class="feature-kicker">Run</div>
-
-        <h3 class="block-title">Stay with the current step</h3>
-
-        <p class="muted">Use the timer and progress bar to keep the block moving.</p>
-
-      </section>
-
-
-
-      <section class="feature feature-simple card aurora-frame">
-
-        <div class="feature-kicker">Reuse</div>
-
-        <h3 class="block-title">Save it as an outline</h3>
-
-        <p class="muted">Bring good sessions back whenever you want them again.</p>
-
-      </section>
-
     </div>
-
-
 
     <section class="landing-band card aurora-frame">
       <div class="landing-band-copy">
@@ -371,22 +384,6 @@ vertical-align: middle;
         <span class="surface-pill">Chrome side panel</span>
       </div>
     </section>
-
-
-
-      <!-- Today's Schedule Widget -->
-      <section id="overviewTodaySchedule" class="feature card aurora-frame p-4" style="display:none;">
-        <div class="flex items-center justify-between mb-3">
-          <div>
-            <h3 class="block-title">Today's Schedule</h3>
-            <p id="overviewScheduleSubtitle" class="text-xs muted mt-1"></p>
-          </div>
-          <button class="text-xs underline" data-tab-jump="calendarTab">View Calendar →</button>
-        </div>
-        <div id="overviewScheduleList" class="space-y-2"></div>
-      </section>
-
-    </div>
 
   </section>
 
@@ -820,36 +817,38 @@ vertical-align: middle;
       <!-- Main Calendar Area -->
       <div class="calendar-main">
 
-        <!-- Calendar Controls -->
-        <div class="card p-4 mb-4">
-          <div class="flex items-center justify-between flex-wrap gap-3">
-            <div class="flex items-center gap-3">
-              <button id="calPrevMonth" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">←</button>
-              <h2 id="calMonthYear" class="block-title text-lg">December 2025</h2>
-              <button id="calNextMonth" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">→</button>
-              <button id="calToday" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Today</button>
-            </div>
-            <div class="flex items-center gap-2">
-              <button id="calViewWeek" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Week</button>
-              <button id="calViewMonth" class="sf-btn sf-btn-primary sf-btn-compact text-sm">Month</button>
+        <div class="calendar-top-row mb-4">
+          <!-- Calendar Controls -->
+          <div class="card p-4">
+            <div class="flex items-center justify-between flex-wrap gap-3">
+              <div class="flex items-center gap-3">
+                <button id="calPrevMonth" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">←</button>
+                <h2 id="calMonthYear" class="block-title text-lg">December 2025</h2>
+                <button id="calNextMonth" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">→</button>
+                <button id="calToday" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Today</button>
+              </div>
+              <div class="flex items-center gap-2">
+                <button id="calViewWeek" class="sf-btn sf-btn-ghost sf-btn-compact text-sm">Week</button>
+                <button id="calViewMonth" class="sf-btn sf-btn-primary sf-btn-compact text-sm">Month</button>
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Today's Schedule Summary -->
-        <div id="todayScheduleCard" class="card p-4 mb-4" style="display:none;">
-          <div class="flex items-center justify-between mb-3">
-            <div>
-              <h3 class="block-title">Today's Schedule</h3>
-              <p id="todayScheduleSubtitle" class="text-xs muted mt-1"></p>
+          <!-- Today's Schedule Summary -->
+          <div id="todayScheduleCard" class="card p-4" style="display:none;">
+            <div class="flex items-center justify-between mb-3">
+              <div>
+                <h3 class="block-title">Today's Schedule</h3>
+                <p id="todayScheduleSubtitle" class="text-xs muted mt-1"></p>
+              </div>
+              <button id="calendarQuickScheduleBtn" class="sf-btn sf-btn-ghost sf-btn-compact text-xs" type="button">+ Schedule</button>
             </div>
-            <button id="calendarQuickScheduleBtn" class="sf-btn sf-btn-ghost sf-btn-compact text-xs" type="button">+ Schedule</button>
+            <div id="todayScheduleList" class="space-y-2"></div>
           </div>
-          <div id="todayScheduleList" class="space-y-2"></div>
         </div>
 
         <!-- Calendar Grid -->
-        <div class="card p-4">
+        <div class="card p-4 calendar-grid-card">
           <div id="calendarGrid" class="calendar-grid">
             <!-- Calendar will be rendered here -->
           </div>
@@ -1539,7 +1538,7 @@ import { getFirestore, doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteF
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js";
 
 
-import { setupSavedOutlines } from "./saved-outlines.js?v=20260320b";
+import { setupSavedOutlines } from "./saved-outlines.js?v=20260321-schedule3";
 
 
 
@@ -1636,6 +1635,36 @@ let calendarEvents = loadJSON('calendar_events_v1') || [];
 // Expose savedOutlines and calendarEvents to window for calendar.js access
 window.savedOutlines = savedOutlines;
 window.calendarEvents = calendarEvents;
+
+function setSavedOutlinesState(nextOutlines, {
+  persistLocal = true,
+  syncCloud = true,
+  renderSaved = false,
+  renderHome = true,
+  renderSchedule = true
+} = {}){
+  savedOutlines = Array.isArray(nextOutlines) ? nextOutlines : [];
+  window.savedOutlines = savedOutlines;
+  if(persistLocal){
+    saveJSON('saved_outlines_v1', savedOutlines);
+  }
+  if(persistLocal || syncCloud){
+    markDirty();
+  }
+  if(syncCloud){
+    touchCloud();
+  }
+  if(renderHome){
+    try{ renderHomeSavedBar(); }catch{}
+  }
+  if(renderSaved){
+    try{ if(typeof renderSavedOutlines === 'function') renderSavedOutlines(); }catch{}
+  }
+  if(renderSchedule){
+    try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{}
+  }
+  return savedOutlines;
+}
 
 function setCalendarEventsState(nextEvents, { persistLocal = true, syncCloud = true, render = true } = {}){
   calendarEvents = Array.isArray(nextEvents) ? nextEvents : [];
@@ -2179,7 +2208,10 @@ function showTab(id, skipHash){
   if(id==='overviewTab'){ if(window.renderOverviewSchedule) window.renderOverviewSchedule(); }
   if(id==='savedTab'){ renderFoldersUI(); renderSavedOutlines(); }
   if(id==='homeTab') { renderHomeSavedBar(); if(window.renderSessionSchedule) window.renderSessionSchedule(); }
-  if(id==='calendarTab'){ if(window.renderCalendar) window.renderCalendar(); }
+  if(id==='calendarTab'){
+    window.scrollTo(0, 0);
+    if(window.renderCalendar) window.renderCalendar();
+  }
   try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{}
   if(id==='pricingTab'){
     // Ensure pricing content is mounted from pricing-tab.js
@@ -4758,7 +4790,10 @@ function renderHomeSavedBar(){
   homeSavedScroller.querySelectorAll('[data-schedule-oid]').forEach(btn=>{
     btn.onclick = (e)=>{
       e.stopPropagation();
-      try{ window.openEventModal && window.openEventModal(null, null, btn.dataset.scheduleOid); }catch{}
+      try{
+        if(window.openOutlineScheduleModal) window.openOutlineScheduleModal(btn.dataset.scheduleOid);
+        else if(window.openEventModal) window.openEventModal(null, null, btn.dataset.scheduleOid);
+      }catch{}
     };
   });
 
@@ -4783,7 +4818,13 @@ function applyOutlineToCurrent(outlineObj){
 const { renderSavedOutlines } = setupSavedOutlines({
   getSavedOutlines: ()=> savedOutlines,
 
-  setSavedOutlines: (arr)=>{ savedOutlines = arr; window.savedOutlines = arr; try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{} },
+  setSavedOutlines: (arr)=> setSavedOutlinesState(arr, {
+    persistLocal:false,
+    syncCloud:false,
+    renderSaved:false,
+    renderHome:false,
+    renderSchedule:true
+  }),
 
   saveOutlinesLocal,
 
@@ -5236,11 +5277,22 @@ onAuthStateChanged(auth, async (user)=>{
 
         if(d.widgetShelf) widgetShelf = d.widgetShelf;
 
-        if(d.savedOutlines) { savedOutlines = d.savedOutlines; window.savedOutlines = savedOutlines; }
+        if(d.savedOutlines) {
+          setSavedOutlinesState(d.savedOutlines, {
+            persistLocal:true,
+            syncCloud:false,
+            renderSaved:false,
+            renderHome:false,
+            renderSchedule:false
+          });
+        }
 
         if(d.folders) savedFolders = d.folders;
 
-        if(d.calendarEvents) { setCalendarEventsState(d.calendarEvents, { persistLocal:true, syncCloud:false, render:false }); }
+        if(d.calendarEvents) {
+          setCalendarEventsState(d.calendarEvents, { persistLocal:true, syncCloud:false, render:false });
+          try{ if(window.syncOutlineScheduleInfo) window.syncOutlineScheduleInfo(d.calendarEvents, { renderSaved:false }); }catch{}
+        }
 
         if(d.sectionDone && typeof d.sectionDone === 'object'){
 
@@ -6407,6 +6459,7 @@ window.skillflowBridge = {
   getCalendarEvents: ()=> calendarEvents,
   setCalendarEvents: (events, opts)=> setCalendarEventsState(events, opts),
   getSavedOutlines: ()=> savedOutlines,
+  setSavedOutlines: (outlines, opts)=> setSavedOutlinesState(outlines, opts),
   showTab: (...args)=> showTab(...args),
   loadOutlineIntoCurrent: (outlineOrId)=>{
     const outline = typeof outlineOrId === 'string'
@@ -6416,7 +6469,8 @@ window.skillflowBridge = {
     applyOutlineToCurrent(outline);
     return true;
   },
-  renderScheduleSurfaces: ()=>{ try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{} }
+  renderScheduleSurfaces: ()=>{ try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{} },
+  renderSavedOutlines: ()=>{ try{ if(typeof renderSavedOutlines === 'function') renderSavedOutlines(); }catch{} }
 };
 
 
@@ -6977,7 +7031,7 @@ renderFoldersUI();
 
 <!-- Calendar functionality -->
 
-<script src="./calendar.js"></script>
+<script src="./calendar.js?v=20260321-schedule3"></script>
 
 </body>
 
