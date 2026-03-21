@@ -147,7 +147,8 @@ const normalizeSections = (rawSections) =>
     id: section.id || `S${index + 1}`,
     name: section.name || section.title || `Section ${index + 1}`,
     minutes: Math.max(1, Math.round(Number(section.minutes) || 0)),
-    links: Array.isArray(section.links) ? section.links : []
+    links: Array.isArray(section.links) ? section.links : [],
+    desc: typeof section.desc === "string" ? section.desc : typeof section.description === "string" ? section.description : ""
   }));
 
 const normalizeOutline = (rawOutline, index) => ({
@@ -175,6 +176,42 @@ const buildRemoteOutlines = (data) => {
 
   return outlines;
 };
+
+const cloneLinks = (links) =>
+  (Array.isArray(links) ? links : []).map((link) =>
+    link && typeof link === "object" ? { ...link } : link
+  );
+
+const buildCurrentSessionPayload = (outline) =>
+  (outline?.sections || []).map((section, index) => ({
+    id: section.id || `S${index + 1}`,
+    name: section.name || `Section ${index + 1}`,
+    minutes: Math.max(1, Math.round(Number(section.minutes) || 0)),
+    links: cloneLinks(section.links)
+  }));
+
+const buildSectionNotesPayload = (outline) => {
+  const notes = {};
+
+  (outline?.sections || []).forEach((section) => {
+    const desc = typeof section.desc === "string" ? section.desc.trim() : "";
+    if (desc && section.id) {
+      notes[section.id] = desc;
+    }
+  });
+
+  return notes;
+};
+
+const buildInitialTimerState = (outline) => ({
+  currentIndex: 0,
+  secondsLeft: outline?.sections?.[0] ? getSectionSeconds(outline.sections[0]) : 0,
+  running: false,
+  sessionStarted: false,
+  awaitingNext: false,
+  outlineId: outline?.id && outline.id !== "__current__" ? outline.id : null,
+  lastSyncTs: Date.now()
+});
 
 const resolveElapsedPosition = (targetElapsed) => {
   const sections = state.activeOutline?.sections || [];
@@ -620,13 +657,14 @@ const updateControls = () => {
   const sections = state.activeOutline?.sections || [];
   const hasSession = sections.length > 0;
   const mirrorMode = isCloudMirrorMode();
+  const syncEnabled = !!state.user;
 
   prevBtn.disabled = !hasSession || state.currentIndex <= 0;
   nextBtn.disabled = !hasSession || (!state.awaitingNext && state.currentIndex >= sections.length - 1);
   startBtn.disabled = !hasSession || state.running || state.awaitingNext;
   pauseBtn.disabled = !state.running;
   stopBtn.disabled = !hasSession;
-  loadSessionBtn.disabled = mirrorMode || sessionSelect.disabled || !sessionSelect.value;
+  loadSessionBtn.disabled = sessionSelect.disabled || !sessionSelect.value;
 
   startBtn.classList.toggle("hidden", state.running);
   pauseBtn.classList.toggle("hidden", !state.running);
@@ -634,8 +672,8 @@ const updateControls = () => {
     progressHost.setAttribute("aria-disabled", hasSession ? "false" : "true");
   }
   if (progressCaption) {
-    if (mirrorMode && !hasSession) {
-      progressCaption.textContent = "No live session found yet. Start or load one in Skillflow to mirror it here.";
+    if (syncEnabled && !hasSession) {
+      progressCaption.textContent = "Choose a saved session here or start one in Skillflow to sync it here.";
     } else if (!hasSession) {
       progressCaption.textContent = "Load a session to start focusing.";
     } else if (mirrorMode) {
@@ -682,6 +720,51 @@ const setActiveOutline = (outlineId, resetTimer = true) => {
   renderProgressSegments();
   renderAll();
   saveTimerState();
+};
+
+const loadOutlineIntoCloud = async (outline) => {
+  if (!state.user || !outline || outline.id === "__current__") return;
+
+  const timer = buildInitialTimerState(outline);
+
+  setCloudStatus("Syncing...");
+
+  await setDoc(
+    userDocRef(state.user.uid),
+    {
+      currentSession: buildCurrentSessionPayload(outline),
+      notes: buildSectionNotesPayload(outline),
+      timer,
+      updatedAt: serverTimestamp()
+    },
+    { merge: true }
+  );
+};
+
+const loadSelectedSession = async () => {
+  const selectedId = sessionSelect.value;
+  if (!selectedId) return;
+
+  const outline = state.outlines.find((item) => item.id === selectedId);
+  if (!outline) return;
+
+  if (selectedId === "__current__") {
+    renderSessionMeta(outline, true);
+    setStatus("", "");
+    return;
+  }
+
+  setActiveOutline(selectedId, true);
+
+  if (!state.user) return;
+
+  try {
+    await loadOutlineIntoCloud(outline);
+    setStatus("Session loaded from the extension.", "success");
+  } catch (error) {
+    setCloudStatus("Cloud sync failed");
+    setStatus(error?.message || "Couldn't load the selected session.", "error");
+  }
 };
 
 const setCurrentIndex = (index) => {
@@ -929,10 +1012,10 @@ openSkillflowBtn.addEventListener("click", () => {
 });
 
 loadSessionBtn.addEventListener("click", () => {
-  if (isCloudMirrorMode()) return;
-  const selectedId = sessionSelect.value;
-  if (!selectedId) return;
-  setActiveOutline(selectedId, true);
+  loadSelectedSession().catch((error) => {
+    setCloudStatus("Cloud sync failed");
+    setStatus(error?.message || "Couldn't load the selected session.", "error");
+  });
 });
 
 sessionSelect.addEventListener("change", () => {
