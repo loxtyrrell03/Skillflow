@@ -3042,6 +3042,15 @@ body.is-phone #focusOverlay > .relative{
   flex-wrap:wrap;
   gap:8px;
 }
+.weekday-picker-panel{
+  padding:12px 14px;
+  border:1px solid color-mix(in srgb, var(--line) 80%, white);
+  border-radius:18px;
+  background:rgba(255,255,255,.78);
+}
+.weekday-picker-panel.is-inactive{
+  background:rgba(255,255,255,.62);
+}
 .schedule-quick-chip,
 .weekday-toggle{
   min-height:38px;
@@ -3064,6 +3073,9 @@ body.is-phone #focusOverlay > .relative{
   border-color:var(--accent);
   box-shadow:0 0 0 2px rgba(14,165,233,.16);
   color:#0b4661;
+}
+.weekday-picker-panel.is-inactive .weekday-toggle{
+  border-style:dashed;
 }
 .weekday-toggle-row{
   display:flex;

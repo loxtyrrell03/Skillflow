@@ -1384,14 +1384,15 @@ vertical-align: middle;
         <select id="eventRecurrenceInput" class="input w-full">
           <option value="">Does not repeat</option>
           <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
+          <option value="weekly">Weekly on chosen days</option>
           <option value="monthly">Monthly</option>
           <option value="yearly">Yearly</option>
           <option value="custom">Custom...</option>
         </select>
+        <p class="text-xs muted mt-2">Click weekdays below to make this repeat on specific days like Monday and Thursday.</p>
       </div>
 
-      <div id="eventWeekdayWrap" class="space-y-2" style="display:none;">
+      <div id="eventWeekdayWrap" class="space-y-2 weekday-picker-panel">
         <div class="flex items-center justify-between gap-3">
           <label class="text-sm muted block">Repeat on</label>
           <span class="text-xs muted">Pick one or more weekdays</span>

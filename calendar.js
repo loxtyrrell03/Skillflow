@@ -1614,7 +1614,10 @@
     if (customRecurrence) customRecurrence.style.display = isCustom ? 'block' : 'none';
 
     const showWeekdays = recurrenceInput?.value === 'weekly' || (isCustom && recurrenceUnit?.value === 'weeks');
-    if (weekdayWrap) weekdayWrap.style.display = showWeekdays ? 'block' : 'none';
+    if (weekdayWrap) {
+      weekdayWrap.style.display = 'block';
+      weekdayWrap.classList.toggle('is-inactive', !showWeekdays);
+    }
     if (recurrenceEndDateWrap) recurrenceEndDateWrap.style.display = recurrenceEnd?.value === 'date' ? 'block' : 'none';
     if (recurrenceCountWrap) recurrenceCountWrap.style.display = recurrenceEnd?.value === 'count' ? 'block' : 'none';
 
@@ -1801,7 +1804,7 @@
       if (recurrenceEndDate) recurrenceEndDate.value = '';
       if (recurrenceCount) recurrenceCount.value = 10;
       if (calendarSelect) calendarSelect.value = suggested.calendarId;
-      setSelectedWeekdays([parseDateValue(dateInput.value).getDay()]);
+      setSelectedWeekdays([]);
       deleteBtn.style.display = 'none';
     }
 
@@ -2623,11 +2626,12 @@
       const quickDateBtn = e.target.closest('#eventQuickDateRow [data-quick-date]');
       if (quickDateBtn) {
         e.preventDefault();
-        const { dateInput } = getModalElements();
+        const { dateInput, recurrenceInput, recurrenceUnit } = getModalElements();
         if (!dateInput) return;
         modalState.activeQuickDate = quickDateBtn.dataset.quickDate || '';
         dateInput.value = formatDateStr(resolveQuickDate(modalState.activeQuickDate));
-        if (!modalState.manualWeekdays) {
+        const isWeekdayRecurrence = recurrenceInput?.value === 'weekly' || (recurrenceInput?.value === 'custom' && recurrenceUnit?.value === 'weeks');
+        if (isWeekdayRecurrence && !modalState.manualWeekdays) {
           setSelectedWeekdays([parseDateValue(dateInput.value).getDay()]);
         }
         applySuggestedTiming({ forceDate: true, forceTime: true });
@@ -2639,7 +2643,14 @@
       const weekdayBtn = e.target.closest('#eventWeekdayWrap [data-weekday]');
       if (weekdayBtn) {
         e.preventDefault();
+        const { recurrenceInput, recurrenceUnit } = getModalElements();
         const weekday = Number(weekdayBtn.dataset.weekday);
+        const isCustomWeekly = recurrenceInput?.value === 'custom' && recurrenceUnit?.value === 'weeks';
+        if (recurrenceInput && recurrenceInput.value !== 'weekly' && !isCustomWeekly) {
+          recurrenceInput.value = 'weekly';
+          modalState.manualWeekdays = false;
+          syncRecurrenceUi();
+        }
         if (!modalState.manualWeekdays) {
           // Treat the initial highlighted weekday as a suggestion. The first
           // manual pick replaces it so "Mon + Thu" does not silently keep the
@@ -2690,7 +2701,8 @@
     if (dateInput) {
       dateInput.addEventListener('change', () => {
         modalState.activeQuickDate = '';
-        if (!modalState.manualWeekdays && dateInput.value) {
+        const isWeekdayRecurrence = recurrenceInput?.value === 'weekly' || (recurrenceInput?.value === 'custom' && recurrenceUnit?.value === 'weeks');
+        if (isWeekdayRecurrence && !modalState.manualWeekdays && dateInput.value) {
           setSelectedWeekdays([parseDateValue(dateInput.value).getDay()]);
         }
         applySuggestedTiming({ forceDate: false, forceTime: !timeInput?.value });
