@@ -1432,6 +1432,7 @@
 
     modal.classList.add('hidden');
     modal.setAttribute('aria-hidden', 'true');
+    document.body.classList.remove('scheduler-modal-open');
     selectedEvent = null;
   }
 
@@ -1816,6 +1817,7 @@
 
     modal.classList.remove('hidden');
     modal.setAttribute('aria-hidden', 'false');
+    document.body.classList.add('scheduler-modal-open');
   }
 
   function saveEvent() {

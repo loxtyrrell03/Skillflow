@@ -1794,7 +1794,7 @@ body.is-phone #focusOverlay .sf-btn{
 }
 
 /* ===== Modals (shared in-app editor, auth, settings) ===== */
-.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:80}
+.modal{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:80;padding:14px;overflow:hidden}
 .modal.hidden{display:none}
 .modal-backdrop{position:absolute;inset:0;background:rgba(15,23,42,.3);backdrop-filter:blur(10px)}
 .modal-panel{
@@ -1807,7 +1807,11 @@ body.is-phone #focusOverlay .sf-btn{
   padding:22px;
   max-width:720px;
   width:calc(100% - 28px);
+  max-height:calc(100dvh - 28px);
+  overflow:auto;
+  overscroll-behavior:contain;
 }
+body.scheduler-modal-open{overflow:hidden}
 
 body.is-phone .modal{
   align-items:flex-end;
