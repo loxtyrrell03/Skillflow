@@ -64,6 +64,13 @@ export function setupSavedOutlines({
   const pluralize = (count, singular, plural)=> `${count} ${count===1 ? singular : (plural || `${singular}s`)}`;
   const escSel = (s)=> (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/([ #;?%&,.+*~':"!^$[\]()=>|/@])/g, '\\$1');
   const debounce = (fn,ms=400)=>{ let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a),ms);} };
+  const widgetDeleteIconHtml = ()=> `
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6.5 3.75h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M4.75 5.5h10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M7.25 5.5v8.25a1 1 0 0 0 1 1h3.5a1 1 0 0 0 1-1V5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8.75 8.25v4.25M11.25 8.25v4.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`;
 
   const getActiveId = ()=> (typeof getActiveOutlineId === 'function' ? getActiveOutlineId() : null);
   function persist(changedOutlineId){
@@ -159,11 +166,11 @@ export function setupSavedOutlines({
         : `<span class="link-icon">${escapeHtml(w.emoji||'🔗')}</span>`;
       return `
         <div class="widget" data-link-idx="${i}">
-          <div class="link-card section-link" draggable="true" data-idx="${i}">
+          <div class="link-card section-link widget-overlay-card" draggable="true" data-idx="${i}">
             ${iconHtml}
             <span class="truncate max-w-[12rem]">${escapeHtml(w.label || 'Untitled')}</span>
           </div>
-          <button class="bin" data-act="del-link" title="Delete">🗑️</button>
+          <button class="bin" data-act="del-link" type="button" title="Delete" aria-label="Delete link">${widgetDeleteIconHtml()}</button>
         </div>`;
     }).join('');
   }
@@ -175,14 +182,14 @@ export function setupSavedOutlines({
         : `<span class="link-icon">${escapeHtml(w.emoji || '🔗')}</span>`;
       return `
         <div class="widget" data-wid="${escapeHtml(w.id)}">
-          <div class="link-card draggable-shelf" draggable="true" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}" style="cursor:grab">
+          <div class="link-card draggable-shelf widget-overlay-card" draggable="true" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}" style="cursor:grab">
             ${iconHtml}
             <div class="min-w-0">
               <div class="truncate" style="font-size:.95rem">${escapeHtml(w.label || 'Untitled')}</div>
               <div class="text-xs muted truncate">${escapeHtml(w.url || '')}</div>
             </div>
           </div>
-          <button class="bin" data-act="del-shelf" title="Delete from shelf">🗑️</button>
+          <button class="bin" data-act="del-shelf" type="button" title="Delete from shelf" aria-label="Delete from shelf">${widgetDeleteIconHtml()}</button>
         </div>`;
     }).join('');
     return `
@@ -309,14 +316,14 @@ export function setupSavedOutlines({
         : `<span class="link-icon">${escapeHtml(w.emoji||'ðŸ”—')}</span>`;
       return `
         <div class="widget saved-link-item" data-link-idx="${i}">
-          <div class="link-card section-link" draggable="true" data-idx="${i}">
+          <div class="link-card section-link widget-overlay-card" draggable="true" data-idx="${i}">
             ${iconHtml}
             <div class="saved-link-copy">
               <span class="truncate">${escapeHtml(w.label || 'Untitled')}</span>
               <span class="saved-link-url truncate">${escapeHtml(w.url || '')}</span>
             </div>
           </div>
-          <button class="bin saved-inline-delete" data-act="del-link" title="Delete">Remove</button>
+          <button class="bin" data-act="del-link" type="button" title="Delete" aria-label="Delete link">${widgetDeleteIconHtml()}</button>
         </div>`;
     }).join('');
   }
@@ -328,14 +335,14 @@ export function setupSavedOutlines({
         : `<span class="link-icon">${escapeHtml(w.emoji || 'ðŸ”—')}</span>`;
       return `
         <div class="widget saved-shelf-item" data-wid="${escapeHtml(w.id)}">
-          <div class="link-card draggable-shelf saved-shelf-card" draggable="true" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}">
+          <div class="link-card draggable-shelf saved-shelf-card widget-overlay-card" draggable="true" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}">
             ${iconHtml}
             <div class="saved-shelf-copy">
               <div class="truncate saved-shelf-title">${escapeHtml(w.label || 'Untitled')}</div>
               <div class="text-xs muted truncate">${escapeHtml(w.url || '')}</div>
             </div>
           </div>
-          <button class="bin saved-inline-delete" data-act="del-shelf" title="Delete from shelf">Remove</button>
+          <button class="bin" data-act="del-shelf" type="button" title="Delete from shelf" aria-label="Delete from shelf">${widgetDeleteIconHtml()}</button>
         </div>`;
     }).join('');
     return `

@@ -17,9 +17,12 @@
 
 <meta name="color-scheme" content="light dark"/>
 
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com"></script>
 
-<link rel="stylesheet" href="./styles.css?v=20260320b"/>
+<link rel="stylesheet" href="./styles.css?v=20260321-home3"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
 <link rel="manifest" href="./manifest.webmanifest?v=20260320f"/>
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
@@ -137,14 +140,14 @@ vertical-align: middle;
 <header id="topbar" class="topbar">
 
   <div class="brand">
-
-    <span class="logo">📁</span>
-
+    <div class="brand-mark-shell" aria-hidden="true">
+      <img class="brand-mark" src="./icons/icon-192.png" alt=""/>
+    </div>
     <div class="brand-text">
 
       <div class="brand-title">Skillflow</div>
 
-      <div class="brand-sub">Structure your training. Master any skill.</div>
+      <div class="brand-sub">Focused sessions for study and work</div>
 
     </div>
 
@@ -182,6 +185,11 @@ vertical-align: middle;
   <div class="topbar-actions">
 
     <button id="settingsBtn" class="sf-btn sf-btn-ghost sf-btn-compact" title="Customize UI">⚙️ Settings</button>
+    <button id="topbarScheduleSummary" class="sf-btn sf-btn-ghost sf-btn-compact topbar-schedule-summary" type="button" data-tab-jump="calendarTab">
+      <span class="topbar-schedule-kicker">Today</span>
+      <span id="topbarScheduleText" class="topbar-schedule-text">No sessions planned</span>
+    </button>
+    <button id="topbarQuickScheduleBtn" class="sf-btn sf-btn-secondary sf-btn-compact" type="button">+ Schedule</button>
 
     <div id="authArea" class="flex items-center gap-2">
 
@@ -225,36 +233,83 @@ vertical-align: middle;
 
       <div class="hero-copy">
 
-        <h1 class="hero-title">Turn big goals into <em>mini‑goals</em> and stay on track.</h1>
+        <div class="hero-kicker">A calmer way to run one session at a time</div>
 
-        <p class="hero-sub">Skillflow is a session‑based planner with a live progress bar that keeps you focused inside a single time block.</p>
+        <h1 class="hero-title">Plan one focused block.<br/><em>Follow it without drifting.</em></h1>
+
+        <p class="hero-sub">Break work into timed sections, keep notes and links beside each step, and let the session carry you forward.</p>
 
         <div class="hero-cta">
 
-          <button class="sf-btn sf-btn-primary" data-tab-jump="homeTab">start session</button>
+          <button class="sf-btn sf-btn-primary" data-tab-jump="homeTab">Start a session</button>
 
-          <button id="learnBasicsBtn" class="sf-btn sf-btn-ghost">Learn the basics ▶</button>
+          <button id="learnBasicsBtn" class="sf-btn sf-btn-ghost">Take the tour</button>
 
+        </div>
+
+        <div class="hero-points" aria-label="Skillflow highlights">
+          <div class="hero-point">
+            <span class="hero-point-label">Plan</span>
+            <strong>Timed mini-goals</strong>
+          </div>
+          <div class="hero-point">
+            <span class="hero-point-label">Stay ready</span>
+            <strong>Links and notes per section</strong>
+          </div>
+          <div class="hero-point">
+            <span class="hero-point-label">Keep visible</span>
+            <strong>Focus mode and pop-out</strong>
+          </div>
         </div>
 
       </div>
 
       <div class="hero-demo">
 
-        <div class="demo-progress">
+        <div class="session-preview">
+          <div class="session-preview-top">
+            <span class="session-pill live">Live session</span>
+            <span class="session-meta">52 min total</span>
+          </div>
 
-          <div class="demo-fill"></div>
+          <div class="session-preview-main">
+            <div class="session-preview-current">
+              <div class="session-eyebrow">Current section</div>
+              <h3>Work through the next practice set</h3>
+              <p>12 minutes left in this step</p>
+              <div class="session-preview-progress" aria-hidden="true">
+                <div class="session-preview-fill"></div>
+              </div>
+            </div>
 
-          <div class="demo-seg"></div><div class="demo-seg"></div><div class="demo-seg"></div>
-
+            <div class="session-preview-list" aria-hidden="true">
+              <div class="preview-row">
+                <span class="preview-dot"></span>
+                <span>Warm up and review</span>
+                <span>08m</span>
+              </div>
+              <div class="preview-row is-active">
+                <span class="preview-dot"></span>
+                <span>Tactics and repetitions</span>
+                <span>18m</span>
+              </div>
+              <div class="preview-row">
+                <span class="preview-dot"></span>
+                <span>Short break</span>
+                <span>05m</span>
+              </div>
+              <div class="preview-row">
+                <span class="preview-dot"></span>
+                <span>Final review</span>
+                <span>21m</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="demo-captions">
-
-          <div>Live progress within your session</div>
-
-          <div>Break work into meaningful mini‑goals</div>
-
+        <div class="hero-note">
+          <div class="hero-note-title">Everything for this block stays in one place.</div>
+          <div class="hero-note-copy">Outline, timer, links, notes, and progress.</div>
         </div>
 
       </div>
@@ -263,109 +318,70 @@ vertical-align: middle;
 
 
 
-    <!-- NEW: vertical stack, aurora-outlined feature cards with friendly copy -->
+    <div class="landing-rail">
 
-    <div class="landing-stack">
+      <section class="feature feature-simple card aurora-frame">
 
-      <section class="feature card aurora-frame reveal p-4">
+        <div class="feature-kicker">Build</div>
 
-        <h3 class="block-title mb-2">Why mini‑goals?</h3>
+        <h3 class="block-title">Outline the session</h3>
 
-        <ul class="list-disc pl-5 space-y-1 text-sm muted">
-
-          <li><strong>Specific beats vague.</strong> Swapping “do your best” for clear, bite‑size targets gives you a concrete next step and sharper focus.</li>
-
-          <li><strong>Progress you can see.</strong> Watching the bar move (and sharing wins) keeps momentum high and makes finishing more likely.</li>
-
-          <li><strong>Closer feels faster.</strong> As you near the next checkpoint, effort naturally ramps up—mini‑goals create these “finish lines” all through your session.</li>
-
-        </ul>
+        <p class="muted">Set the order, timing, links, and notes before you start.</p>
 
       </section>
 
 
 
-      <section class="feature card aurora-frame reveal p-4">
+      <section class="feature feature-simple card aurora-frame">
 
-        <h3 class="block-title mb-2">Plan once. Stay present.</h3>
+        <div class="feature-kicker">Run</div>
 
-        <p class="muted text-sm">Design your outline up front, then work. Skillflow’s progress bar gives instant feedback and guards against drift.</p>
+        <h3 class="block-title">Stay with the current step</h3>
 
-      </section>
-
-
-
-      <section class="feature card aurora-frame reveal p-4">
-
-        <h3 class="block-title mb-2">Flexible links & notes</h3>
-
-        <p class="muted text-sm">Attach links and notes to each mini‑goal so everything you need is one click away.</p>
+        <p class="muted">Use the timer and progress bar to keep the block moving.</p>
 
       </section>
 
 
 
-      <!-- NEW: simple side‑by‑side comparison -->
+      <section class="feature feature-simple card aurora-frame">
 
-      <section class="feature card aurora-frame reveal p-4">
+        <div class="feature-kicker">Reuse</div>
 
-        <h3 class="block-title mb-3">Mini‑goals vs “do your best”</h3>
+        <h3 class="block-title">Save it as an outline</h3>
 
-        <div class="compare-grid">
-
-          <div class="compare-card">
-
-            <div class="compare-head">With mini‑goals ✅</div>
-
-            <ul class="compare-list">
-
-              <li>Clear next action; less dithering</li>
-
-              <li>Visible progress boosts motivation</li>
-
-              <li>Built‑in checkpoints to course‑correct</li>
-
-              <li>Lower mental load (one step at a time)</li>
-
-              <li>Easier to attach the right links/resources</li>
-
-            </ul>
-
-          </div>
-
-          <div class="compare-card">
-
-            <div class="compare-head bad">“Do your best” ✖︎</div>
-
-            <ul class="compare-list bad">
-
-              <li>Vague target → aimless effort</li>
-
-              <li>Hard to tell if you’re on track</li>
-
-              <li>Easier to drift or zone out</li>
-
-              <li>Higher chance of procrastination</li>
-
-              <li>Resources scattered; more context switching</li>
-
-            </ul>
-
-          </div>
-
-        </div>
-
-        <p class="text-xs muted mt-3">This guidance reflects well‑established findings on specific goals, progress monitoring, and the goal‑gradient effect.</p>
+        <p class="muted">Bring good sessions back whenever you want them again.</p>
 
       </section>
+
+    </div>
+
+
+
+    <section class="landing-band card aurora-frame">
+      <div class="landing-band-copy">
+        <div class="landing-band-kicker">Made for execution</div>
+        <h3 class="block-title">Keep the session visible wherever you work.</h3>
+        <p class="muted">Run it in the main app, switch to Focus Mode, pop progress into a floating window, or mirror it in the Chrome side panel.</p>
+      </div>
+      <div class="landing-surface-list" aria-label="Skillflow surfaces">
+        <span class="surface-pill">Web app</span>
+        <span class="surface-pill">Focus Mode</span>
+        <span class="surface-pill">Progress pop-out</span>
+        <span class="surface-pill">Chrome side panel</span>
+      </div>
+    </section>
 
 
 
       <!-- Today's Schedule Widget -->
-      <section id="overviewTodaySchedule" class="feature card aurora-frame reveal p-4" style="display:none;">
+      <section id="overviewTodaySchedule" class="feature card aurora-frame p-4" style="display:none;">
         <div class="flex items-center justify-between mb-3">
-          <h3 class="block-title">Today's Schedule</h3>
-          <button class="text-xs underline" onclick="window.showTab && window.showTab('calendarTab')">View Calendar →</button>
+          <div>
+            <h3 class="block-title">Today's Schedule</h3>
+            <p id="overviewScheduleSubtitle" class="text-xs muted mt-1"></p>
+          </div>
+          <button class="text-xs underline" data-tab-jump="calendarTab">View Calendar →</button>
         </div>
         <div id="overviewScheduleList" class="space-y-2"></div>
       </section>
@@ -410,8 +426,11 @@ vertical-align: middle;
     <!-- Today's Schedule -->
     <section id="sessionTodaySchedule" class="mb-4 card planner-subsurface p-4" style="display:none">
       <div class="flex items-center justify-between mb-2">
-        <h3 class="block-title">Today's Schedule</h3>
-        <a href="#calendar" class="text-xs text-[var(--accent)] hover:underline">View Calendar →</a>
+        <div>
+          <h3 class="block-title">Today's Schedule</h3>
+          <p id="sessionScheduleSubtitle" class="text-xs muted mt-1"></p>
+        </div>
+        <button class="text-xs text-[var(--accent)] hover:underline" data-tab-jump="calendarTab" type="button">View Calendar →</button>
       </div>
       <div id="sessionScheduleList" class="flex flex-col gap-2"></div>
     </section>
@@ -703,6 +722,23 @@ vertical-align: middle;
       </div>
     </div>
 
+    <section id="savedSchedulePanel" class="card saved-schedule-panel" style="display:none;">
+      <div class="saved-schedule-head">
+        <div class="saved-schedule-copy">
+          <div class="saved-toolbar-kicker">Schedule</div>
+          <h3 class="saved-folders-title">Plan today and the next few sessions</h3>
+          <p id="savedScheduleSubtitle" class="saved-folders-text"></p>
+        </div>
+
+        <div class="saved-toolbar-actions">
+          <button id="savedQuickScheduleBtn" class="saved-toolbar-btn saved-toolbar-btn-secondary">+ Schedule outline</button>
+          <button class="saved-toolbar-btn saved-toolbar-btn-secondary" data-tab-jump="calendarTab">Open calendar</button>
+        </div>
+      </div>
+
+      <div id="savedScheduleList" class="flex flex-col gap-2"></div>
+    </section>
+
     <div id="mergeBar" class="card saved-merge-banner" style="display:none">
       <div class="saved-merge-copy">
         <div class="saved-toolbar-kicker">Merge outlines</div>
@@ -802,7 +838,13 @@ vertical-align: middle;
 
         <!-- Today's Schedule Summary -->
         <div id="todayScheduleCard" class="card p-4 mb-4" style="display:none;">
-          <h3 class="block-title mb-3">Today's Schedule</h3>
+          <div class="flex items-center justify-between mb-3">
+            <div>
+              <h3 class="block-title">Today's Schedule</h3>
+              <p id="todayScheduleSubtitle" class="text-xs muted mt-1"></p>
+            </div>
+            <button id="calendarQuickScheduleBtn" class="sf-btn sf-btn-ghost sf-btn-compact text-xs" type="button">+ Schedule</button>
+          </div>
           <div id="todayScheduleList" class="space-y-2"></div>
         </div>
 
@@ -1295,6 +1337,16 @@ vertical-align: middle;
         </select>
       </div>
 
+      <div>
+        <label class="text-sm muted mb-2 block">Quick date</label>
+        <div id="eventQuickDateRow" class="schedule-quick-row">
+          <button type="button" class="schedule-quick-chip" data-quick-date="today">Today</button>
+          <button type="button" class="schedule-quick-chip" data-quick-date="tomorrow">Tomorrow</button>
+          <button type="button" class="schedule-quick-chip" data-quick-date="nextMonday">Next Monday</button>
+          <button type="button" class="schedule-quick-chip" data-quick-date="nextWeek">Next week</button>
+        </div>
+      </div>
+
       <!-- All-Day Checkbox -->
       <div class="flex items-center gap-2">
         <input id="eventAllDayInput" type="checkbox" class="w-4 h-4 accent-[var(--accent)]"/>
@@ -1324,6 +1376,7 @@ vertical-align: middle;
           <input id="eventEndTimeInput" type="time" class="input w-full"/>
         </div>
       </div>
+      <p id="eventTimeHint" class="text-xs muted">Start and end times auto-fill from the outline duration, and you can adjust them if needed.</p>
 
       <!-- Recurrence -->
       <div>
@@ -1336,6 +1389,22 @@ vertical-align: middle;
           <option value="yearly">Yearly</option>
           <option value="custom">Custom...</option>
         </select>
+      </div>
+
+      <div id="eventWeekdayWrap" class="space-y-2" style="display:none;">
+        <div class="flex items-center justify-between gap-3">
+          <label class="text-sm muted block">Repeat on</label>
+          <span class="text-xs muted">Pick one or more weekdays</span>
+        </div>
+        <div class="weekday-toggle-row">
+          <button type="button" class="weekday-toggle" data-weekday="0">Sun</button>
+          <button type="button" class="weekday-toggle" data-weekday="1">Mon</button>
+          <button type="button" class="weekday-toggle" data-weekday="2">Tue</button>
+          <button type="button" class="weekday-toggle" data-weekday="3">Wed</button>
+          <button type="button" class="weekday-toggle" data-weekday="4">Thu</button>
+          <button type="button" class="weekday-toggle" data-weekday="5">Fri</button>
+          <button type="button" class="weekday-toggle" data-weekday="6">Sat</button>
+        </div>
       </div>
 
       <!-- Custom Recurrence Options (hidden by default) -->
@@ -1383,7 +1452,7 @@ vertical-align: middle;
       <!-- Event Preview (shows sections summary) -->
       <div id="eventPreview" class="card p-3 bg-[var(--accent-100)] border-[var(--accent)]" style="display:none;">
         <div class="text-sm muted mb-2">Session Preview:</div>
-        <div id="eventPreviewContent" class="text-sm"></div>
+        <div id="eventPreviewContent" class="text-sm space-y-1"></div>
       </div>
 
       <!-- Action Buttons -->
@@ -1566,6 +1635,28 @@ let calendarEvents = loadJSON('calendar_events_v1') || [];
 // Expose savedOutlines and calendarEvents to window for calendar.js access
 window.savedOutlines = savedOutlines;
 window.calendarEvents = calendarEvents;
+
+function setCalendarEventsState(nextEvents, { persistLocal = true, syncCloud = true, render = true } = {}){
+  calendarEvents = Array.isArray(nextEvents) ? nextEvents : [];
+  window.calendarEvents = calendarEvents;
+  if(persistLocal){
+    saveJSON('calendar_events_v1', calendarEvents);
+  }
+  if(persistLocal || syncCloud){
+    markDirty();
+  }
+  if(syncCloud){
+    touchCloud();
+  }
+  if(render){
+    try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{}
+    try{
+      const calendarTab = document.getElementById('calendarTab');
+      if(window.renderCalendar && calendarTab && !calendarTab.classList.contains('hidden')) window.renderCalendar();
+    }catch{}
+  }
+  return calendarEvents;
+}
 // AI chat context (initial brief + subsequent revision turns)
 var __aiInitialBrief = '';
 var __aiChatHistory = [];
@@ -1639,6 +1730,7 @@ const debounce = (fn,ms=1000)=>{ let t; return (...a)=>{ clearTimeout(t); t=setT
 let dirty = false;
 
 const markDirty = ()=> { dirty = true; };
+window.markDirty = markDirty;
 
 const setLocalMode = (m='Local mode')=> cloudStatus.textContent = m;
 
@@ -1948,6 +2040,8 @@ async function saveCloudNow(){
 
       folders: savedFolders,
 
+      calendarEvents,
+
       sectionDone: (window.__sectionDone || {}),
 
       timer: timerState,
@@ -2020,6 +2114,7 @@ const savePrefs = ()=>{ saveJSON('prefs_v1', prefs); markDirty(); touchCloud(); 
 const saveOutlinesLocal = ()=>{ saveJSON('saved_outlines_v1', savedOutlines); markDirty(); touchCloud(); };
 
 const saveFoldersLocal = ()=>{ saveJSON('outline_folders_v1', savedFolders); markDirty(); touchCloud(); };
+const saveCalendarEventsLocal = ()=> setCalendarEventsState(calendarEvents);
   const saveTimerLocal = ()=>{ saveJSON('timer_state_v2', timerState); markDirty(); touchCloud(); };
 
 // Clear current session-related data (used on sign-out)
@@ -2078,11 +2173,13 @@ function showTab(id, skipHash){
     const el = document.getElementById(secId);
     if(el) el.classList.toggle('hidden', secId !== id);
   });
+  document.body.classList.toggle('overview-active', id === 'overviewTab');
 
   if(id==='overviewTab'){ if(window.renderOverviewSchedule) window.renderOverviewSchedule(); }
   if(id==='savedTab'){ renderFoldersUI(); renderSavedOutlines(); }
   if(id==='homeTab') { renderHomeSavedBar(); if(window.renderSessionSchedule) window.renderSessionSchedule(); }
   if(id==='calendarTab'){ if(window.renderCalendar) window.renderCalendar(); }
+  try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{}
   if(id==='pricingTab'){
     // Ensure pricing content is mounted from pricing-tab.js
     try{
@@ -2096,6 +2193,7 @@ function showTab(id, skipHash){
     if(location.hash.replace(/^#/,'') !== route){ location.hash = '#' + route; }
   }
 }
+window.showTab = showTab;
 const tabsBar = document.querySelector('.topnav-links');
 
 if(tabsBar){
@@ -3507,6 +3605,47 @@ window.openWidgetEditor = openWidgetEditor;
 /*************** Current panel (Home) ***************/
 
 let isEditingSection=false;
+let outlineEditingSectionId = null;
+const outlineSectionDrafts = new Map();
+
+function widgetDeleteIconHtml(){
+  return `
+    <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
+      <path d="M6.5 3.75h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M4.75 5.5h10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      <path d="M7.25 5.5v8.25a1 1 0 0 0 1 1h3.5a1 1 0 0 0 1-1V5.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
+      <path d="M8.75 8.25v4.25M11.25 8.25v4.25" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+    </svg>`;
+}
+
+function formatEditorMinutes(value){
+  const n = Number(value || 0);
+  return Number.isFinite(n) ? String(n).replace(/\.0+$/,'') : '0';
+}
+
+function ensureOutlineSectionDraft(section){
+  if(!section) return { name:'', minutes:'', desc:'' };
+  if(!outlineSectionDrafts.has(section.id)){
+    outlineSectionDrafts.set(section.id, {
+      name: section.name || '',
+      minutes: section.minutes ?? '',
+      desc: sectionNotes[section.id] ?? ''
+    });
+  }
+  return outlineSectionDrafts.get(section.id);
+}
+
+function updateOutlineSectionDraft(sectionId, patch){
+  const section = currentSession.find(x=>x.id===sectionId);
+  if(!section) return;
+  const draft = ensureOutlineSectionDraft(section);
+  Object.assign(draft, patch);
+}
+
+function clearOutlineSectionDraft(sectionId){
+  outlineSectionDrafts.delete(sectionId);
+  if(outlineEditingSectionId === sectionId) outlineEditingSectionId = null;
+}
 
 
 
@@ -3616,39 +3755,64 @@ window.addEventListener('resize', ()=>{ if(isEditingSection) autosizeTitleInput(
 
 function currentSectionRef(){ return currentSession[currentIndex]; }
 
+function defaultWidgetShelfItems(){
+  return [
+    { id:'w_lichess', label:'Lichess', url:'https://lichess.org', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
+    { id:'w_analysis', label:'Lichess Analysis', url:'https://lichess.org/analysis', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
+    { id:'w_chessable', label:'Chessable', url:'https://www.chessable.com', icon:'emoji', emoji:'📘' }
+  ];
+}
+
+function refreshWidgetEditingSurfaces(){
+  renderShelf();
+  if(outlineEditingSectionId) renderOutline();
+}
+
+function createShelfWidget(){
+  const wid = 'W'+Date.now().toString(36);
+  const placeholder = { id: wid, label:'', url:'', icon:'emoji', emoji:'🔗', img:'' };
+
+  widgetShelf = [...widgetShelf, placeholder];
+  saveShelf();
+  refreshWidgetEditingSurfaces();
+
+  const onCancel = ()=>{
+    const idx = widgetShelf.findIndex(x=>x.id===wid);
+    if(idx>=0){
+      widgetShelf.splice(idx,1);
+      saveShelf();
+      refreshWidgetEditingSurfaces();
+    }
+  };
+
+  openWidgetEditor(placeholder, (upd)=>{
+    upd.url = normalizeUrl(upd.url);
+    const item = widgetShelf.find(x=>x.id===wid);
+    if(item){
+      Object.assign(item, upd);
+      saveShelf();
+      refreshWidgetEditingSurfaces();
+    }
+  }, onCancel);
+}
+
+async function resetWidgetShelfToDefaults(){
+  if(!await sfConfirm('Reset link shelf to defaults?')) return;
+  widgetShelf = defaultWidgetShelfItems();
+  saveShelf();
+  refreshWidgetEditingSurfaces();
+}
+
 
 
 // Add widget
 
-addWidgetBtn.onclick = ()=>{ if(!isEditingSection) editSectionBtn.click();
-
-  const wid = 'W'+Date.now().toString(36);
-
-  const placeholder = { id: wid, label:'', url:'', icon:'emoji', emoji:'🔗', img:'' };
-
-  widgetShelf = [...widgetShelf, placeholder]; saveShelf(); renderShelf();
-
-  const onCancel = ()=>{ const idx = widgetShelf.findIndex(x=>x.id===wid); if(idx>=0){ widgetShelf.splice(idx,1); saveShelf(); renderShelf(); } };
-
-  openWidgetEditor(placeholder, (upd)=>{ upd.url = normalizeUrl(upd.url); const it = widgetShelf.find(x=>x.id===wid); if(it){ Object.assign(it, upd); saveShelf(); renderShelf(); } }, onCancel);
-
+addWidgetBtn.onclick = ()=>{
+  if(!isEditingSection) editSectionBtn.click();
+  createShelfWidget();
 };
 
-resetShelfBtn.onclick = async ()=>{ if(!await sfConfirm('Reset link shelf to defaults?')) return;
-
-  widgetShelf = [
-
-    { id:'w_lichess', label:'Lichess', url:'https://lichess.org', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-
-    { id:'w_analysis', label:'Lichess Analysis', url:'https://lichess.org/analysis', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-
-    { id:'w_chessable',label:'Chessable', url:'https://www.chessable.com', icon:'emoji', emoji:'📘' }
-
-  ];
-
-  saveShelf(); renderShelf();
-
-};
+resetShelfBtn.onclick = ()=> resetWidgetShelfToDefaults();
 
 
 
@@ -3664,7 +3828,7 @@ function widgetCardHTML(w){
 
   <div class="widget" data-wid="${escapeHtml(w.id)}">
 
-    <div class="link-card draggable-shelf" draggable="${isEditingSection?'true':'false'}" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}" style="cursor:${isEditingSection?'grab':'default'}">
+    <div class="link-card draggable-shelf widget-overlay-card" draggable="${isEditingSection?'true':'false'}" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}" style="cursor:${isEditingSection?'grab':'default'}">
 
       ${iconHtml}
 
@@ -3678,7 +3842,7 @@ function widgetCardHTML(w){
 
     </div>
 
-    ${isEditingSection ? `<button class="bin" data-act="del-shelf" title="Delete from shelf">🗑️</button>` : ''}
+    ${isEditingSection ? `<button class="bin" data-act="del-shelf" type="button" title="Delete from shelf" aria-label="Delete from shelf">${widgetDeleteIconHtml()}</button>` : ''}
 
   </div>`;
 
@@ -3702,7 +3866,7 @@ function renderShelf(){
 
       const w = widgetShelf.find(x=>x.id===card.dataset.wid); if(!w) return;
 
-      openWidgetEditor(w, (upd)=>{ upd.url = normalizeUrl(upd.url); Object.assign(w, upd); saveShelf(); renderShelf(); });
+      openWidgetEditor(w, (upd)=>{ upd.url = normalizeUrl(upd.url); Object.assign(w, upd); saveShelf(); renderShelf(); if(outlineEditingSectionId) renderOutline(); });
 
     });
 
@@ -3752,7 +3916,7 @@ function renderShelf(){
 
       const idx = widgetShelf.findIndex(x=>x.id===wid);
 
-      if(idx>=0){ widgetShelf.splice(idx,1); saveShelf(); renderShelf(); }
+      if(idx>=0){ widgetShelf.splice(idx,1); saveShelf(); renderShelf(); if(outlineEditingSectionId) renderOutline(); }
 
     });
 
@@ -3773,7 +3937,7 @@ function renderCurrentLinks(){
 
     <div class="widget" data-link-idx="${i}">
 
-      <div class="link-card section-link" draggable="${isEditingSection?'true':'false'}" data-idx="${i}">
+      <div class="link-card section-link widget-overlay-card" draggable="${isEditingSection?'true':'false'}" data-idx="${i}">
 
         ${w.icon==='img' && w.img ? `<img src="${escapeHtml(w.img)}" alt="" class="rounded-[4px] object-cover" draggable="false" style="width:18px;height:18px;"/>` : `<span class="link-icon">${escapeHtml(w.emoji||'🔗')}</span>`}
 
@@ -3781,7 +3945,7 @@ function renderCurrentLinks(){
 
       </div>
 
-      ${isEditingSection ? `<button class="bin" data-act="del-link" title="Delete">🗑️</button>` : ''}
+      ${isEditingSection ? `<button class="bin" data-act="del-link" type="button" title="Delete" aria-label="Delete link">${widgetDeleteIconHtml()}</button>` : ''}
 
     </div>`).join('');
 
@@ -3792,7 +3956,7 @@ function renderCurrentLinks(){
     linksDiv.appendChild(addBtn);
     addBtn.addEventListener('click', ()=>{
       const blank = { label:'New link', url:'https://', icon:'emoji', emoji:'🔗', img:'' };
-      openWidgetEditor(blank, (upd)=>{ upd.url = normalizeUrl(upd.url); const sec = currentSectionRef(); if(!sec) return; sec.links = sec.links || []; sec.links.push(upd); saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); });
+      openWidgetEditor(blank, (upd)=>{ upd.url = normalizeUrl(upd.url); const sec = currentSectionRef(); if(!sec) return; sec.links = sec.links || []; sec.links.push(upd); saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); if(outlineEditingSectionId) renderOutline(); });
     });
   }
 
@@ -3844,7 +4008,7 @@ function renderCurrentLinks(){
 
           Object.assign(target, upd);
 
-          saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent();
+          saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); if(outlineEditingSectionId) renderOutline();
 
         });
 
@@ -3872,7 +4036,7 @@ function renderCurrentLinks(){
 
         const pill = btn.closest('.widget')?.querySelector('.section-link'); const i = Number(pill?.dataset.idx ?? -1);
 
-        if(i>=0){ sec.links.splice(i,1); saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); }
+        if(i>=0){ sec.links.splice(i,1); saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); if(outlineEditingSectionId) renderOutline(); }
 
       });
 
@@ -3919,7 +4083,7 @@ function bindLinksDropTargets(){
         sec.links.push( sec.links.splice(from,1)[0] ); // move to end
       }
     }
-    saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent();
+    saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); if(outlineEditingSectionId) renderOutline();
   });
 }
 
@@ -3937,7 +4101,7 @@ clearSectionLinksBtn.onclick = async ()=>{
 
   sec.links.length = 0;
 
-  saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent();
+  saveCurrentSession(); renderCurrentLinks(); renderFocusLinks(); syncSavedFromCurrent(); if(outlineEditingSectionId) renderOutline();
 
 };
 
@@ -3947,206 +4111,485 @@ const syncSavedFromCurrentDebounced = debounce(()=>{ try{ syncSavedFromCurrent()
 
 sectionDescEl.addEventListener('input', ()=>{ if(sectionDescEl.disabled) return; const s=currentSession[currentIndex]; if(!s) return; sectionNotes[s.id] = sectionDescEl.value; saveNotes(); syncSavedFromCurrentDebounced(); });
 
+function saveOutlineSectionDraft(sectionId){
+  const section = currentSession.find(x=>x.id===sectionId);
+  if(!section) return;
+
+  const draft = ensureOutlineSectionDraft(section);
+  const prevMinutes = Number(section.minutes) || 0;
+  const prevTotalSec = minsToSecs(prevMinutes);
+  const elapsedSec = currentSession[currentIndex]?.id===section.id ? Math.max(0, prevTotalSec - secondsLeft) : 0;
+  const parsedMinutes = Number(draft.minutes);
+  const nextMinutes = Number.isFinite(parsedMinutes) ? Math.max(0.25, parsedMinutes) : Math.max(0.25, Number(section.minutes) || 0.25);
+
+  section.name = (draft.name || '').trim() || section.name || 'Untitled section';
+  section.minutes = nextMinutes;
+  sectionNotes[section.id] = draft.desc || '';
+
+  if(currentSession[currentIndex]?.id === section.id){
+    const newTotal = minsToSecs(nextMinutes);
+    secondsLeft = Math.max(0, newTotal - elapsedSec);
+    if(running) syncEnd();
+  }
+
+  saveCurrentSession();
+  saveNotes();
+  clearOutlineSectionDraft(sectionId);
+  renderOutline();
+  buildProgress();
+  updateProgress();
+  renderCurrent();
+  updateStartBtnLabel();
+  markTimer();
+  syncSavedFromCurrent();
+}
+
+function sessionOutlinePreviewRowHtml(section, idx){
+  const subtle = idx===currentIndex ? 'Current section in this session.' : 'Click to jump straight into this step.';
+  return `
+    <li class="outline-row saved-section-row ${idx===currentIndex?'outline-active':''}" data-id="${escapeHtml(section.id)}" data-view="preview" draggable="${outlineEditingSectionId ? 'false' : 'true'}">
+      <div class="saved-section-card">
+        <div class="saved-section-copy">
+          <div class="saved-section-name truncate">${escapeHtml(section.name || 'Untitled section')}</div>
+          <div class="saved-section-subtle">${subtle}</div>
+        </div>
+        <div class="saved-section-actions">
+          <span class="saved-section-mins">${formatEditorMinutes(section.minutes)} min</span>
+          <button class="btn-xs" data-act="edit" type="button">Edit</button>
+          <button class="btn-xxs saved-icon-btn" data-act="del" type="button">Delete</button>
+        </div>
+      </div>
+    </li>`;
+}
+
+function sessionOutlineLinksBarHtml(links){
+  if(!(links||[]).length){
+    return `<div class="saved-empty-links">Drop links here from the shelf below.</div>`;
+  }
+  return (links||[]).map((w,i)=>`
+    <div class="widget saved-link-item" data-link-idx="${i}">
+      <div class="link-card section-link widget-overlay-card" draggable="true" data-idx="${i}">
+        ${w.icon==='img' && w.img ? `<img src="${escapeHtml(w.img)}" alt="" class="rounded-[4px] object-cover" draggable="false" style="width:18px;height:18px;"/>` : `<span class="link-icon">${escapeHtml(w.emoji||'🔗')}</span>`}
+        <div class="saved-link-copy">
+          <span class="truncate">${escapeHtml(w.label || 'Untitled')}</span>
+          <span class="saved-link-url truncate">${escapeHtml(w.url || '')}</span>
+        </div>
+      </div>
+      <button class="bin" data-act="del-link" type="button" title="Delete" aria-label="Delete link">${widgetDeleteIconHtml()}</button>
+    </div>`).join('');
+}
+
+function sessionOutlineShelfHtml(){
+  const items = (widgetShelf||[]).map(w=>`
+    <div class="widget saved-shelf-item" data-wid="${escapeHtml(w.id)}">
+      <div class="link-card draggable-shelf saved-shelf-card widget-overlay-card" draggable="true" data-wid="${escapeHtml(w.id)}" title="${escapeHtml(w.url || '')}">
+        ${w.icon==='img' && w.img ? `<img src="${escapeHtml(w.img)}" alt="" class="rounded-[4px] object-cover" draggable="false" style="width:18px;height:18px;"/>` : `<span class="link-icon">${escapeHtml(w.emoji || '🔗')}</span>`}
+        <div class="saved-shelf-copy">
+          <div class="truncate saved-shelf-title">${escapeHtml(w.label || 'Untitled')}</div>
+          <div class="text-xs muted truncate">${escapeHtml(w.url || '')}</div>
+        </div>
+      </div>
+      <button class="bin" data-act="del-shelf" type="button" title="Delete from shelf" aria-label="Delete from shelf">${widgetDeleteIconHtml()}</button>
+    </div>`).join('');
+
+  return `
+    <div class="section-edit-panel" data-role="inline-shelf">
+      <div class="section-panel-head">
+        <div>
+          <div class="section-panel-title">Widget shelf</div>
+          <div class="section-panel-copy">Drag reusable resources into the links area, or click one to edit it.</div>
+        </div>
+        <div class="saved-panel-actions">
+          <button class="btn-xs saved-action saved-action-inline" data-act="add-shelf" type="button">+ New widget</button>
+          <button class="btn-xs saved-action saved-action-subtle" data-act="reset-shelf" type="button">Reset</button>
+        </div>
+      </div>
+      <div class="editor-shelf" data-role="shelf-row">${items || '<div class="saved-empty-links">No widgets yet. Add one to reuse it across sections.</div>'}</div>
+    </div>`;
+}
+
+function sessionOutlineEditRowHtml(section){
+  const draft = ensureOutlineSectionDraft(section);
+  return `
+    <li class="outline-row editing" data-id="${escapeHtml(section.id)}" data-view="edit">
+      <div class="section-edit compact-edit" data-sid="${escapeHtml(section.id)}" data-view="edit">
+        <div class="section-edit-header">
+          <div>
+            <div class="section-edit-kicker">Editing section</div>
+            <div class="section-edit-subtitle">Keep the structure simple, then attach only the links you need.</div>
+          </div>
+        </div>
+        <div class="row head">
+          <label class="section-field">
+            <span class="field-label">Title</span>
+            <input class="input title-input flex-1" data-role="edit-title" value="${escapeHtml(draft.name || '')}" placeholder="Section title"/>
+          </label>
+          <label class="section-field section-field-mins">
+            <span class="field-label">Minutes</span>
+            <input class="input mins-input" type="number" min="0.25" step="0.25" data-role="edit-mins" value="${escapeHtml(String(draft.minutes ?? ''))}"/>
+          </label>
+        </div>
+        <label class="row section-field">
+          <span class="field-label">Description</span>
+          <textarea class="input w-full" data-role="edit-desc" placeholder="What should this section focus on?">${escapeHtml(draft.desc || '')}</textarea>
+        </label>
+        <div class="section-edit-panels">
+          ${sessionOutlineShelfHtml()}
+          <div class="section-edit-panel">
+            <div class="section-panel-head">
+              <div>
+                <div class="section-panel-title">Links</div>
+                <div class="section-panel-copy">Drop widgets here to attach them to this section.</div>
+              </div>
+            </div>
+            <div class="section-links-bar" data-role="links-bar">${sessionOutlineLinksBarHtml(section.links || [])}</div>
+          </div>
+        </div>
+        <div class="section-edit-footer">
+          <div class="section-edit-note">Tip: drag rows or links to reorganize them.</div>
+          <button class="saved-save-btn" data-act="save-outline-section" type="button">Save section</button>
+        </div>
+      </div>
+    </li>`;
+}
+
 
 
 /*************** Outline (Home) with reorder + delete ***************/
 
 function renderOutline(){
+  if(outlineEditingSectionId && !currentSession.some(s=>s.id===outlineEditingSectionId)){
+    outlineEditingSectionId = null;
+  }
 
-  outline.innerHTML = currentSession.map((s,i)=>`
+  outline.innerHTML = currentSession.map((section, idx)=>(
+    outlineEditingSectionId === section.id
+      ? sessionOutlineEditRowHtml(section)
+      : sessionOutlinePreviewRowHtml(section, idx)
+  )).join('');
 
-    <li class="outline-row ${i===currentIndex?'outline-active':''}" data-id="${s.id}" draggable="true">
-
-      <div class="flex items-center gap-3">
-
-        <button class="text-left min-w-0 flex-1 truncate text-sm font-semibold focus:outline-none">${escapeHtml(s.name||'')}</button>
-
-        <div class="flex items-center gap-2 shrink-0">
-
-          <span class="text-xs w-16 text-right">${Number(s.minutes||0)}m</span>
-
-          <button class="btn-xs" data-act="edit">Edit</button>
-
-          <button class="btn-xs" data-act="del">Delete</button>
-
-        </div>
-
-      </div>
-
-    </li>`).join('');
-
-
-
-  outline.querySelectorAll('li[data-id]').forEach((li, idx)=>{
-
-    li.addEventListener('click', (e)=>{ if(li.classList.contains('editing')) return; if(e.target.closest('[data-act], input, select, textarea, button')) return; jumpToSection(idx); });
-
+  outline.querySelectorAll('li[data-view="preview"]').forEach((li, idx)=>{
+    li.addEventListener('click', (e)=>{
+      if(e.target.closest('[data-act], input, select, textarea, button, .link-card, .bin')) return;
+      jumpToSection(idx);
+    });
   });
-
-
-
-  // Inline edit UI
 
   outline.querySelectorAll('[data-act="edit"]').forEach(btn=>{
-
     btn.addEventListener('click', ()=>{
-
-      const li = btn.closest('li[data-id]'); const id = li.dataset.id; const idx=currentSession.findIndex(x=>x.id===id); if(idx<0) return;
-
-      const cur=currentSession[idx];
-
-      li.classList.add('editing'); li.draggable = false;
-
-      li.innerHTML = `
-
-        <div class="flex items-center gap-2">
-
-          <input class="input flex-1 text-sm outline-edit-title" id="edtTitle" value="${escapeHtml(cur.name||'')}" />
-
-          <input class="input w-24 text-sm" id="edtValue" type="number" step="0.1" min="0.01" value="${(+cur.minutes||0).toFixed(2).replace(/\.00$/,'')}" />
-
-          <select id="edtUnit" class="input h-9 w-20 text-sm">
-
-            <option value="minutes" selected>min</option>
-
-            <option value="seconds">sec</option>
-
-            <option value="hours">hr</option>
-
-          </select>
-
-          <button class="btn-xxs" id="edtSave">Save</button>
-
-        </div>`;
-
-      const edtTitle=li.querySelector('#edtTitle'), edtValue=li.querySelector('#edtValue'), edtUnit=li.querySelector('#edtUnit');
-
-      const saveInline = ()=>{
-
-        const prevMin = cur.minutes, prevTotal = minsToSecs(prevMin);
-
-        const elapsedSec = currentSession[currentIndex]?.id===cur.id ? Math.max(0, prevTotal - secondsLeft) : 0;
-
-        cur.name = (edtTitle.value.trim() || cur.name);
-
-        cur.minutes = Math.max(0.01, toMinutesValue(edtValue.value, edtUnit.value));
-
-        if(currentSession[currentIndex]?.id===cur.id){ const newTotal = minsToSecs(cur.minutes); secondsLeft = Math.max(0, newTotal - elapsedSec); if(running) syncEnd(); }
-
-        saveCurrentSession(); renderOutline(); buildProgress(); updateProgress(); renderCurrent(); updateStartBtnLabel(); markTimer(); syncSavedFromCurrent();
-
-      };
-
-      li.querySelector('#edtSave').onclick = saveInline;
-
-      [edtTitle, edtValue].forEach(el=> el.addEventListener('keydown', (e)=>{ if(e.key==='Enter'){ e.preventDefault(); saveInline(); }}));
-
+      const id = btn.closest('li[data-id]')?.dataset.id;
+      const section = currentSession.find(x=>x.id===id);
+      if(!section) return;
+      outlineEditingSectionId = id;
+      ensureOutlineSectionDraft(section);
+      renderOutline();
+      const editorRow = [...outline.querySelectorAll('li[data-view="edit"]')].find(el=> el.dataset.id === id);
+      const titleEl = editorRow?.querySelector('[data-role="edit-title"]');
+      titleEl?.focus();
+      titleEl?.select();
     });
-
   });
-
-
-
-  // Delete section
 
   outline.querySelectorAll('[data-act="del"]').forEach(btn=>{
-
     btn.addEventListener('click', async ()=>{
+      const id = btn.closest('li[data-id]')?.dataset.id;
+      const idx = currentSession.findIndex(x=>x.id===id);
+      if(idx < 0) return;
 
-      const li = btn.closest('li[data-id]'); const id = li.dataset.id; const idx=currentSession.findIndex(x=>x.id===id); if(idx<0) return;
-
-      const ok = await sfConfirm('Delete this section from the current session?'); if(!ok) return;
+      const ok = await sfConfirm('Delete this section from the current session?');
+      if(!ok) return;
 
       currentSession.splice(idx,1);
-
+      delete sectionNotes[id];
+      clearOutlineSectionDraft(id);
       currentIndex = Math.min(currentIndex, Math.max(0, currentSession.length-1));
-
       secondsLeft = minsToSecs((currentSession[currentIndex]||{}).minutes||0);
 
-      saveCurrentSession(); renderAll(); markTimer(); syncSavedFromCurrent();
-
+      saveCurrentSession();
+      saveNotes();
+      renderAll();
+      markTimer();
+      syncSavedFromCurrent();
     });
-
   });
 
+  outline.querySelectorAll('li[data-view="edit"]').forEach(li=>{
+    const sectionId = li.dataset.id;
+    const section = currentSession.find(x=>x.id===sectionId);
+    if(!section) return;
 
+    const editor = li.querySelector('.section-edit');
+    const titleEl = editor?.querySelector('[data-role="edit-title"]');
+    const minsEl = editor?.querySelector('[data-role="edit-mins"]');
+    const descEl = editor?.querySelector('[data-role="edit-desc"]');
+    const saveBtn = editor?.querySelector('[data-act="save-outline-section"]');
+    const linksBar = editor?.querySelector('[data-role="links-bar"]');
+    const shelfPanel = editor?.querySelector('[data-role="inline-shelf"]');
+    const showShelf = !(prefs && prefs.showWidgetShelf===false);
 
-  // Drag reorder
+    titleEl?.addEventListener('input', ()=> updateOutlineSectionDraft(sectionId, { name: titleEl.value }));
+    minsEl?.addEventListener('input', ()=> updateOutlineSectionDraft(sectionId, { minutes: minsEl.value }));
+    descEl?.addEventListener('input', ()=> updateOutlineSectionDraft(sectionId, { desc: descEl.value }));
+
+    saveBtn?.addEventListener('click', ()=> saveOutlineSectionDraft(sectionId));
+    [titleEl, minsEl].forEach(el=> el?.addEventListener('keydown', (e)=>{
+      if(e.key==='Enter'){
+        e.preventDefault();
+        saveOutlineSectionDraft(sectionId);
+      }
+    }));
+
+    if(!showShelf && linksBar){
+      shelfPanel?.remove();
+      const addBtn = document.createElement('button');
+      addBtn.className = 'btn-xs';
+      addBtn.type = 'button';
+      addBtn.textContent = '+ Add link';
+      addBtn.setAttribute('data-act','add-link');
+      linksBar.appendChild(addBtn);
+      addBtn.addEventListener('click', ()=>{
+        const blank = { label:'New link', url:'https://', icon:'emoji', emoji:'🔗', img:'' };
+        openWidgetEditor(blank, (upd)=>{
+          upd.url = normalizeUrl(upd.url);
+          section.links = section.links || [];
+          section.links.push(upd);
+          saveCurrentSession();
+          renderOutline();
+          renderCurrent();
+          syncSavedFromCurrent();
+        });
+      });
+    }
+
+    if(linksBar){
+      let over = 0;
+      linksBar.addEventListener('dragenter', ()=>{
+        over++;
+        linksBar.classList.add('drag-over-outline');
+      });
+      linksBar.addEventListener('dragleave', ()=>{
+        over = Math.max(0, over-1);
+        if(!over) linksBar.classList.remove('drag-over-outline');
+      });
+      linksBar.addEventListener('dragover', (e)=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect='copy';
+      });
+      linksBar.addEventListener('drop', (e)=>{
+        e.preventDefault();
+        over = 0;
+        linksBar.classList.remove('drag-over-outline');
+        const payload = parseDropPayload(e.dataTransfer);
+        section.links = section.links || [];
+
+        if(payload?.type === 'shelf'){
+          const widget = widgetShelf.find(x=>x.id===payload.id);
+          if(!widget) return;
+          section.links.push({ label:widget.label, url:normalizeUrl(widget.url||''), emoji:widget.emoji, icon:widget.icon, img:widget.img });
+        }else if(payload?.type === 'reorder'){
+          const from = Number(payload.index);
+          const cards = [...linksBar.querySelectorAll('.section-link')];
+          let to = cards.length;
+          for(let i=0;i<cards.length;i++){
+            const rect = cards[i].getBoundingClientRect();
+            if(e.clientY < rect.top + rect.height/2){
+              to = i;
+              break;
+            }
+          }
+          if(Number.isNaN(from) || from < 0 || from >= section.links.length) return;
+          const [moved] = section.links.splice(from,1);
+          section.links.splice(to,0,moved);
+        }else{
+          return;
+        }
+
+        saveCurrentSession();
+        renderOutline();
+        renderCurrent();
+        syncSavedFromCurrent();
+      });
+
+      linksBar.querySelectorAll('.section-link').forEach(card=>{
+        card.addEventListener('dragstart', (e)=>{
+          const index = Number(card.dataset.idx);
+          try{
+            e.dataTransfer.setData('text/plain', JSON.stringify({type:'reorder', index}));
+            const img = new Image();
+            img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E";
+            if(e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(img, 0, 0);
+          }catch{}
+          e.dataTransfer.effectAllowed='move';
+          card.classList.add('drag-ghost');
+        });
+        card.addEventListener('dragend', ()=> card.classList.remove('drag-ghost'));
+        card.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const index = Number(card.dataset.idx);
+          const target = section.links?.[index];
+          if(!target) return;
+          openWidgetEditor(target, (upd)=>{
+            upd.url = normalizeUrl(upd.url);
+            Object.assign(target, upd);
+            saveCurrentSession();
+            renderOutline();
+            renderCurrent();
+            syncSavedFromCurrent();
+          });
+        });
+      });
+
+      linksBar.querySelectorAll('[data-act="del-link"]').forEach(bin=>{
+        bin.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const card = bin.closest('.widget')?.querySelector('.section-link');
+          const index = Number(card?.dataset.idx ?? -1);
+          if(index < 0) return;
+          section.links.splice(index,1);
+          saveCurrentSession();
+          renderOutline();
+          renderCurrent();
+          syncSavedFromCurrent();
+        });
+      });
+    }
+
+    if(shelfPanel && showShelf){
+      shelfPanel.querySelector('[data-act="add-shelf"]')?.addEventListener('click', ()=> createShelfWidget());
+      shelfPanel.querySelector('[data-act="reset-shelf"]')?.addEventListener('click', ()=> resetWidgetShelfToDefaults());
+
+      shelfPanel.querySelectorAll('.draggable-shelf').forEach(card=>{
+        card.addEventListener('dragstart', (e)=>{
+          const id = card.dataset.wid;
+          try{
+            e.dataTransfer.setData('text/plain', JSON.stringify({type:'shelf', id}));
+            const img = new Image();
+            img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E";
+            if(e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(img, 0, 0);
+          }catch{}
+          e.dataTransfer.effectAllowed='copy';
+          card.classList.add('drag-ghost');
+        });
+        card.addEventListener('dragend', ()=> card.classList.remove('drag-ghost'));
+        card.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const widget = widgetShelf.find(x=>x.id===card.dataset.wid);
+          if(!widget) return;
+          openWidgetEditor(widget, (upd)=>{
+            upd.url = normalizeUrl(upd.url);
+            Object.assign(widget, upd);
+            saveShelf();
+            renderOutline();
+            renderShelf();
+          });
+        });
+      });
+
+      shelfPanel.querySelectorAll('[data-act="del-shelf"]').forEach(btn=>{
+        btn.addEventListener('click', (e)=>{
+          e.stopPropagation();
+          const wid = btn.closest('[data-wid]')?.dataset.wid;
+          const idx = widgetShelf.findIndex(x=>x.id===wid);
+          if(idx < 0) return;
+          widgetShelf.splice(idx,1);
+          saveShelf();
+          renderOutline();
+          renderShelf();
+        });
+      });
+    }
+  });
+
+  totalMins.textContent=`Total: ${Math.round(scheduleTotalSecs(currentSession)/60)} minutes`;
+  outline.ondragover = null;
+  outline.ondrop = null;
+
+  if(outlineEditingSectionId) return;
 
   let dragging = null;
+  const makePh = (h, titleText)=>{
+    const ph = document.createElement('li');
+    ph.className='outline-row drop-placeholder';
+    ph.style.setProperty('--ph', `${Math.max(36,h)}px`);
+    ph.innerHTML = `<div class="text-xs muted px-2 truncate">${escapeHtml(titleText||'')}</div>`;
+    return ph;
+  };
 
-  const makePh = (h, titleText)=>{ const ph = document.createElement('li'); ph.className='outline-row drop-placeholder'; ph.style.setProperty('--ph', `${Math.max(36,h)}px`); ph.innerHTML = `<div class="text-xs muted px-2 truncate">${escapeHtml(titleText||'')}</div>`; return ph; };
-
-  outline.querySelectorAll('li[data-id]').forEach((li, idx)=>{
-
+  outline.querySelectorAll('li[data-view="preview"]').forEach((li, idx)=>{
     li.addEventListener('dragstart', (e)=>{
-
-      if(li.classList.contains('editing')){ e.preventDefault(); return; }
-
-      const titleText = (li.querySelector('button')?.textContent || '').trim();
-
+      const titleText = (li.querySelector('.saved-section-name')?.textContent || '').trim();
       dragging = { from: idx, el: li, placeholder: makePh(li.offsetHeight, titleText) };
-
-      li.classList.add('dragging'); li.after(dragging.placeholder);
+      li.classList.add('dragging');
+      li.after(dragging.placeholder);
       setTimeout(()=>{ if(dragging?.el === li) li.classList.add('dragging-hidden'); }, 0);
 
       try{
-
         e.dataTransfer.setData('text/plain', JSON.stringify({type:'outline-move', from: idx}));
-
-        const img = new Image(); img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E";
-
+        const img = new Image();
+        img.src = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='1' height='1'/%3E";
         if(e.dataTransfer.setDragImage) e.dataTransfer.setDragImage(img, 0, 0);
-
-      }catch{} e.dataTransfer.effectAllowed='move';
-
+      }catch{}
+      e.dataTransfer.effectAllowed='move';
     });
 
-    li.addEventListener('dragend', ()=>{ li.classList.remove('dragging', 'dragging-hidden'); dragging?.placeholder?.remove(); dragging = null; });
+    li.addEventListener('dragend', ()=>{
+      li.classList.remove('dragging', 'dragging-hidden');
+      dragging?.placeholder?.remove();
+      dragging = null;
+    });
 
-    const onOver = (e)=>{ if(!dragging) return; e.preventDefault(); const r = li.getBoundingClientRect(); const before = e.clientY < (r.top + r.height/2); const ph = dragging.placeholder; if(before){ if(li.previousSibling !== ph) outline.insertBefore(ph, li); }else{ if(li.nextSibling !== ph) li.after(ph); } };
+    const onOver = (e)=>{
+      if(!dragging) return;
+      e.preventDefault();
+      const rect = li.getBoundingClientRect();
+      const before = e.clientY < (rect.top + rect.height/2);
+      const ph = dragging.placeholder;
+      if(before){
+        if(li.previousSibling !== ph) outline.insertBefore(ph, li);
+      }else if(li.nextSibling !== ph){
+        li.after(ph);
+      }
+    };
 
-    li.addEventListener('dragover', onOver); li.addEventListener('dragenter', onOver);
-
+    li.addEventListener('dragover', onOver);
+    li.addEventListener('dragenter', onOver);
   });
 
-  outline.addEventListener('dragover', (e)=>{ if(!dragging) return; e.preventDefault(); if(!outline.contains(dragging.placeholder)) outline.appendChild(dragging.placeholder); });
+  outline.ondragover = (e)=>{
+    if(!dragging) return;
+    e.preventDefault();
+    if(!outline.contains(dragging.placeholder)) outline.appendChild(dragging.placeholder);
+  };
 
-  outline.addEventListener('drop', (e)=>{
-
-    if(!dragging) return; e.preventDefault();
-
-    const from = dragging.from;
+  outline.ondrop = (e)=>{
+    if(!dragging) return;
+    e.preventDefault();
 
     const rows = Array.from(outline.querySelectorAll('li.outline-row'));
-
     const phIndex = rows.indexOf(dragging.placeholder);
-
     const to = phIndex < 0 ? rows.length-1 : phIndex;
+    const finalTo = to > dragging.from ? to - 1 : to;
 
-    const finalTo = (to > from) ? to - 1 : to;
+    if(dragging.from !== finalTo && dragging.from >= 0 && finalTo >= 0){
+      const [moved] = currentSession.splice(dragging.from,1);
+      currentSession.splice(finalTo,0,moved);
 
-    if(from !== finalTo && from >= 0 && finalTo >= 0){
+      if(currentIndex === dragging.from) currentIndex = finalTo;
+      else if(currentIndex > dragging.from && currentIndex <= finalTo) currentIndex -= 1;
+      else if(currentIndex < dragging.from && currentIndex >= finalTo) currentIndex += 1;
 
-      const [moved] = currentSession.splice(from,1); currentSession.splice(finalTo,0,moved);
-
-      if(currentIndex === from) currentIndex = finalTo;
-
-      else if(currentIndex > from && currentIndex <= finalTo) currentIndex -= 1;
-
-      else if(currentIndex < from && currentIndex >= finalTo) currentIndex += 1;
-
-      saveCurrentSession(); renderOutline(); buildProgress(); updateProgress(); renderCurrent(); syncSavedFromCurrent();
-
+      saveCurrentSession();
+      renderOutline();
+      buildProgress();
+      updateProgress();
+      renderCurrent();
+      syncSavedFromCurrent();
     }
 
-    dragging.el.classList.remove('dragging', 'dragging-hidden'); dragging.placeholder.remove(); dragging = null;
-
-  });
-
-
-
-  totalMins.textContent=`Total: ${Math.round(scheduleTotalSecs(currentSession)/60)} minutes`;
+    dragging.el.classList.remove('dragging', 'dragging-hidden');
+    dragging.placeholder.remove();
+    dragging = null;
+  };
 
 }
 
@@ -4295,11 +4738,14 @@ function renderHomeSavedBar(){
 
     ? visibleOutlines.map(o=>`
 
-      <button type="button" class="chip ${o.id===activeId ? 'chip-active' : ''}" data-oid="${escapeHtml(o.id)}" title="${escapeHtml(o.title || 'Outline')}">
-
-        ${escapeHtml(o.title || 'Untitled')}
-
-      </button>`).join('')
+      <div class="home-outline-chip ${o.id===activeId ? 'is-active' : ''}">
+        <button type="button" class="chip home-outline-chip-main ${o.id===activeId ? 'chip-active' : ''}" data-oid="${escapeHtml(o.id)}" title="${escapeHtml(o.title || 'Outline')}">
+          ${escapeHtml(o.title || 'Untitled')}
+        </button>
+        <button type="button" class="home-outline-chip-schedule" data-schedule-oid="${escapeHtml(o.id)}" title="Schedule ${escapeHtml(o.title || 'outline')}">
+          📅
+        </button>
+      </div>`).join('')
 
     : `<div class="text-xs muted">${currentFolderId || savedOutlines.length ? 'No saved outlines in this folder yet.' : 'No saved outlines yet.'}</div>`);
 
@@ -4307,6 +4753,12 @@ function renderHomeSavedBar(){
 
     btn.onclick = ()=>{ const o = savedOutlines.find(x=>x.id===btn.dataset.oid); if(o){ applyOutlineToCurrent(o); requestAnimationFrame(renderHomeSavedBar); } };
 
+  });
+  homeSavedScroller.querySelectorAll('[data-schedule-oid]').forEach(btn=>{
+    btn.onclick = (e)=>{
+      e.stopPropagation();
+      try{ window.openEventModal && window.openEventModal(null, null, btn.dataset.scheduleOid); }catch{}
+    };
   });
 
   syncProgressPopout();
@@ -4330,7 +4782,7 @@ function applyOutlineToCurrent(outlineObj){
 const { renderSavedOutlines } = setupSavedOutlines({
   getSavedOutlines: ()=> savedOutlines,
 
-  setSavedOutlines: (arr)=>{ savedOutlines = arr; window.savedOutlines = arr; },
+  setSavedOutlines: (arr)=>{ savedOutlines = arr; window.savedOutlines = arr; try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{} },
 
   saveOutlinesLocal,
 
@@ -4787,7 +5239,7 @@ onAuthStateChanged(auth, async (user)=>{
 
         if(d.folders) savedFolders = d.folders;
 
-        if(d.calendarEvents) { calendarEvents = d.calendarEvents; window.calendarEvents = calendarEvents; }
+        if(d.calendarEvents) { setCalendarEventsState(d.calendarEvents, { persistLocal:true, syncCloud:false, render:false }); }
 
         if(d.sectionDone && typeof d.sectionDone === 'object'){
 
@@ -5949,6 +6401,22 @@ function renderCurrent(){ const s=currentSession[currentIndex];
 }
 
 function renderAll(){ renderOutline(); buildProgress(); updateProgress(); renderCurrent(); refreshPhoneNotificationCard(); syncProgressPopout(); }
+window.renderAll = renderAll;
+window.skillflowBridge = {
+  getCalendarEvents: ()=> calendarEvents,
+  setCalendarEvents: (events, opts)=> setCalendarEventsState(events, opts),
+  getSavedOutlines: ()=> savedOutlines,
+  showTab: (...args)=> showTab(...args),
+  loadOutlineIntoCurrent: (outlineOrId)=>{
+    const outline = typeof outlineOrId === 'string'
+      ? savedOutlines.find(item => item.id === outlineOrId)
+      : outlineOrId;
+    if(!outline) return false;
+    applyOutlineToCurrent(outline);
+    return true;
+  },
+  renderScheduleSurfaces: ()=>{ try{ if(window.renderScheduleSurfaces) window.renderScheduleSurfaces(); }catch{} }
+};
 
 
 
