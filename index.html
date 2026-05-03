@@ -22,7 +22,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Sora:wght@400;600;700;800&display=swap" rel="stylesheet"/>
 <script src="https://cdn.tailwindcss.com"></script>
 
-<link rel="stylesheet" href="./styles.css?v=20260321-schedule3"/>
+<link rel="stylesheet" href="./styles.css?v=20260503-homepage4"/>
 <link rel="icon" href="./logo2.png" type="image/png"/>
 <link rel="manifest" href="./manifest.webmanifest?v=20260320f"/>
 <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png"/>
@@ -227,161 +227,81 @@ vertical-align: middle;
 
   <!-- ======= OVERVIEW / LANDING ======= -->
 
-  <section id="overviewTab" class="page-shell">
+  <section id="overviewTab" class="page-shell landing-page">
 
-    <div class="landing-hero card aurora-frame reveal">
+    <section class="landing-hero reveal" aria-label="Skillflow overview">
+      <img class="landing-hero-image" src="./assets/landing/skillflow-hero-workspace.png" alt="" aria-hidden="true"/>
+      <div class="landing-hero-overlay" aria-hidden="true"></div>
 
       <div class="hero-copy">
-
-        <div class="hero-kicker">A calmer way to run one session at a time</div>
-
-        <h1 class="hero-title">Plan one focused block.<br/><em>Follow it without drifting.</em></h1>
-
-        <p class="hero-sub">Break work into timed sections, keep notes and links beside each step, and let the session carry you forward.</p>
+        <div class="hero-kicker">Skillflow</div>
+        <h1 class="hero-title">Plan the block.<br/>Work the block.</h1>
+        <p class="hero-sub">Timed sections, links, notes, and progress in one focused session.</p>
 
         <div class="hero-cta">
-
           <button class="sf-btn sf-btn-primary" data-tab-jump="homeTab">Start a session</button>
-
           <button id="learnBasicsBtn" class="sf-btn sf-btn-ghost">Take the tour</button>
-
         </div>
-
-        <div class="hero-points" aria-label="Skillflow highlights">
-          <div class="hero-point">
-            <span class="hero-point-label">Plan</span>
-            <strong>Timed mini-goals</strong>
-          </div>
-          <div class="hero-point">
-            <span class="hero-point-label">Stay ready</span>
-            <strong>Links and notes per section</strong>
-          </div>
-          <div class="hero-point">
-            <span class="hero-point-label">Keep visible</span>
-            <strong>Focus mode and pop-out</strong>
-          </div>
-        </div>
-
       </div>
 
-      <div class="hero-demo">
+      <div class="hero-session-mark" aria-label="Example live session">
+        <span>Now</span>
+        <strong>Deep Work</strong>
+        <em>18m</em>
+      </div>
+    </section>
 
-        <div class="session-preview">
-          <div class="session-preview-top">
-            <span class="session-pill live">Live session</span>
-            <span class="session-meta">52 min total</span>
+    <section class="landing-proof reveal" aria-label="Skillflow essentials">
+      <p>One clean run from outline to finish.</p>
+      <div class="landing-proof-list">
+        <span>Outline</span>
+        <span>Timer</span>
+        <span>Links</span>
+        <span>Focus</span>
+      </div>
+    </section>
+
+    <div class="overview-secondary-grid landing-workflow">
+      <section class="landing-workflow-copy reveal">
+        <div class="feature-kicker">How it moves</div>
+        <h2 class="block-title">A session, not another to-do list.</h2>
+        <div class="workflow-steps" aria-label="Skillflow workflow">
+          <div>
+            <span>01</span>
+            <strong>Sketch the order.</strong>
           </div>
-
-          <div class="session-preview-main">
-            <div class="session-preview-current">
-              <div class="session-eyebrow">Current section</div>
-              <h3>Work through the next practice set</h3>
-              <p>12 minutes left in this step</p>
-              <div class="session-preview-progress" aria-hidden="true">
-                <div class="session-preview-fill"></div>
-              </div>
-            </div>
-
-            <div class="session-preview-list" aria-hidden="true">
-              <div class="preview-row">
-                <span class="preview-dot"></span>
-                <span>Warm up and review</span>
-                <span>08m</span>
-              </div>
-              <div class="preview-row is-active">
-                <span class="preview-dot"></span>
-                <span>Tactics and repetitions</span>
-                <span>18m</span>
-              </div>
-              <div class="preview-row">
-                <span class="preview-dot"></span>
-                <span>Short break</span>
-                <span>05m</span>
-              </div>
-              <div class="preview-row">
-                <span class="preview-dot"></span>
-                <span>Final review</span>
-                <span>21m</span>
-              </div>
-            </div>
+          <div>
+            <span>02</span>
+            <strong>Add what each step needs.</strong>
+          </div>
+          <div>
+            <span>03</span>
+            <strong>Run it with the clock visible.</strong>
           </div>
         </div>
-
-        <div class="hero-note">
-          <div class="hero-note-title">Everything for this block stays in one place.</div>
-          <div class="hero-note-copy">Outline, timer, links, notes, and progress.</div>
-        </div>
-
-      </div>
-
-    </div>
-
-
-
-    <div class="overview-secondary-grid">
-      <div class="landing-rail">
-
-        <section class="feature feature-simple card aurora-frame">
-
-          <div class="feature-kicker">Build</div>
-
-          <h3 class="block-title">Outline the session</h3>
-
-          <p class="muted">Set the order, timing, links, and notes before you start.</p>
-
-        </section>
-
-
-
-        <section class="feature feature-simple card aurora-frame">
-
-          <div class="feature-kicker">Run</div>
-
-          <h3 class="block-title">Stay with the current step</h3>
-
-          <p class="muted">Use the timer and progress bar to keep the block moving.</p>
-
-        </section>
-
-
-
-        <section class="feature feature-simple card aurora-frame">
-
-          <div class="feature-kicker">Reuse</div>
-
-          <h3 class="block-title">Save it as an outline</h3>
-
-          <p class="muted">Bring good sessions back whenever you want them again.</p>
-
-        </section>
-
-      </div>
+      </section>
 
       <!-- Today's Schedule Widget -->
-      <section id="overviewTodaySchedule" class="feature card aurora-frame overview-schedule-card" style="display:none;">
+      <section id="overviewTodaySchedule" class="overview-schedule-card reveal" style="display:none;">
         <div class="overview-schedule-head">
           <div>
             <div class="feature-kicker">Today</div>
-            <h3 class="block-title">Today's Schedule</h3>
+            <h3 class="block-title">Scheduled</h3>
             <p id="overviewScheduleSubtitle" class="text-xs muted mt-1"></p>
           </div>
-          <button class="text-xs underline" data-tab-jump="calendarTab" type="button">View Calendar →</button>
+          <button class="text-xs underline" data-tab-jump="calendarTab" type="button">Calendar</button>
         </div>
         <div id="overviewScheduleList" class="overview-schedule-list"></div>
       </section>
     </div>
 
-    <section class="landing-band card aurora-frame">
+    <section class="landing-band reveal">
+      <img class="landing-band-image" src="./assets/landing/skillflow-planning-background.png" alt="" aria-hidden="true"/>
+      <div class="landing-band-shade" aria-hidden="true"></div>
       <div class="landing-band-copy">
-        <div class="landing-band-kicker">Made for execution</div>
-        <h3 class="block-title">Keep the session visible wherever you work.</h3>
-        <p class="muted">Run it in the main app, switch to Focus Mode, pop progress into a floating window, or mirror it in the Chrome side panel.</p>
-      </div>
-      <div class="landing-surface-list" aria-label="Skillflow surfaces">
-        <span class="surface-pill">Web app</span>
-        <span class="surface-pill">Focus Mode</span>
-        <span class="surface-pill">Progress pop-out</span>
-        <span class="surface-pill">Chrome side panel</span>
+        <div class="landing-band-kicker">Keep it visible</div>
+        <h2 class="block-title">Focus Mode. Pop-out. Side panel.</h2>
+        <p>Use the surface that fits the work.</p>
       </div>
     </section>
 
