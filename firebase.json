@@ -10,7 +10,8 @@
       "skillflow extension/**",
       ".github/**",
       ".vscode/**",
-      "AGENTS.md"
+      "AGENTS.md",
+      "skillflow-home-*.png"
     ],
     "headers": [
       {
