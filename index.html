@@ -1458,7 +1458,14 @@ import { getFirestore, doc, getDoc, onSnapshot, setDoc, serverTimestamp, deleteF
 import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/12.1.0/firebase-functions.js";
 
 
-import { setupSavedOutlines } from "./saved-outlines.js?v=20260321-schedule3";
+import { setupSavedOutlines } from "./saved-outlines.js?v=20260513-summer-chess";
+import {
+  CHESSABLE_WIDGET_DEFAULTS,
+  DEFAULT_WIDGET_SHELF,
+  SUMMER_CHESS_STUDY_FOLDER,
+  SUMMER_CHESS_STUDY_OUTLINES,
+  SUMMER_CHESS_STUDY_SEED_KEY
+} from "./default-study-plans.js?v=20260513-summer-chess";
 
 
 
@@ -1519,15 +1526,7 @@ let currentSession = loadJSON('current_session_v1') || [];
 
 let sectionNotes = loadJSON('section_notes_v1') || {};
 
-let widgetShelf = loadJSON('linkShelf_v1') || [
-
-  { id:'w_lichess', label:'Lichess', url:'https://lichess.org', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-
-  { id:'w_analysis', label:'Lichess Analysis', url:'https://lichess.org/analysis', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-
-  { id:'w_chessable',label:'Chessable', url:'https://www.chessable.com', icon:'emoji', emoji:'📘' }
-
-];
+let widgetShelf = loadJSON('linkShelf_v1') || defaultWidgetShelfItems();
 
 let prefs = loadJSON('prefs_v1') || {
   splitRatio:56,
@@ -1681,6 +1680,80 @@ let dirty = false;
 
 const markDirty = ()=> { dirty = true; };
 window.markDirty = markDirty;
+
+function cloneDefaultValue(value){
+  try{ return structuredClone(value); }
+  catch{ return JSON.parse(JSON.stringify(value)); }
+}
+
+function ensureSummerChessStudyDefaults({ persistLocal = true, syncCloud = false, render = false, force = false } = {}){
+  if(!prefs || typeof prefs !== 'object') prefs = {};
+  if(!prefs.defaultSeeds || typeof prefs.defaultSeeds !== 'object' || Array.isArray(prefs.defaultSeeds)){
+    prefs.defaultSeeds = {};
+  }
+
+  if(prefs.defaultSeeds[SUMMER_CHESS_STUDY_SEED_KEY] && !force) return false;
+
+  let changed = false;
+  const folderName = String(SUMMER_CHESS_STUDY_FOLDER.name || '').trim().toLowerCase();
+  let folder = savedFolders.find(f => f.id === SUMMER_CHESS_STUDY_FOLDER.id)
+    || savedFolders.find(f => String(f?.name || '').trim().toLowerCase() === folderName);
+
+  if(!folder){
+    folder = { ...SUMMER_CHESS_STUDY_FOLDER };
+    savedFolders.push(folder);
+    changed = true;
+  }
+
+  SUMMER_CHESS_STUDY_OUTLINES.forEach(seedOutline => {
+    const title = String(seedOutline.title || '').trim().toLowerCase();
+    const exists = savedOutlines.some(outline =>
+      outline.id === seedOutline.id
+      || String(outline?.title || '').trim().toLowerCase() === title
+    );
+    if(exists) return;
+    const nextOutline = cloneDefaultValue(seedOutline);
+    nextOutline.folderId = folder.id;
+    savedOutlines.push(nextOutline);
+    changed = true;
+  });
+
+  CHESSABLE_WIDGET_DEFAULTS.forEach(seedWidget => {
+    const seedUrl = String(seedWidget.url || '').replace(/\/$/, '');
+    const exists = widgetShelf.some(widget =>
+      widget.id === seedWidget.id
+      || String(widget?.url || '').replace(/\/$/, '') === seedUrl
+    );
+    if(exists) return;
+    widgetShelf.push({ ...seedWidget });
+    changed = true;
+  });
+
+  prefs.defaultSeeds[SUMMER_CHESS_STUDY_SEED_KEY] = true;
+  changed = true;
+
+  if(persistLocal){
+    saveJSON('saved_outlines_v1', savedOutlines);
+    saveJSON('outline_folders_v1', savedFolders);
+    saveJSON('linkShelf_v1', widgetShelf);
+    saveJSON('prefs_v1', prefs);
+    markDirty();
+  }
+
+  if(render){
+    try{ if(typeof renderSavedOutlines === 'function') renderSavedOutlines(); }catch{}
+    try{ if(typeof renderFoldersUI === 'function') renderFoldersUI(); }catch{}
+    try{ renderHomeSavedBar(); }catch{}
+  }
+
+  if(syncCloud && currentUser){
+    try{ saveCloudNow(); }catch{}
+  }
+
+  return changed;
+}
+
+ensureSummerChessStudyDefaults();
 
 const setLocalMode = (m='Local mode')=> cloudStatus.textContent = m;
 
@@ -3709,11 +3782,7 @@ window.addEventListener('resize', ()=>{ if(isEditingSection) autosizeTitleInput(
 function currentSectionRef(){ return currentSession[currentIndex]; }
 
 function defaultWidgetShelfItems(){
-  return [
-    { id:'w_lichess', label:'Lichess', url:'https://lichess.org', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-    { id:'w_analysis', label:'Lichess Analysis', url:'https://lichess.org/analysis', icon:'img', img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-    { id:'w_chessable', label:'Chessable', url:'https://www.chessable.com', icon:'emoji', emoji:'📘' }
-  ];
+  return DEFAULT_WIDGET_SHELF.map(item => ({ ...item }));
 }
 
 function refreshWidgetEditingSurfaces(){
@@ -5188,6 +5257,7 @@ onAuthStateChanged(auth, async (user)=>{
       if(snap.exists()){
 
         const d = snap.data()||{};
+        const cloudHadSummerChessSeed = !!d.prefs?.defaultSeeds?.[SUMMER_CHESS_STUDY_SEED_KEY];
 
         if(d.currentSession) currentSession = d.currentSession;
 
@@ -5228,13 +5298,20 @@ onAuthStateChanged(auth, async (user)=>{
 
         if(d.timer) timerState = d.timer;
 
+        ensureSummerChessStudyDefaults({ persistLocal:true, syncCloud:true, force: !cloudHadSummerChessSeed });
+
         applyTheme(prefs.theme||{}); applySplitRatio(prefs.splitRatio||56);
 
         setTimerFromState(timerState); renderAll(); renderHomeSavedBar(); setCloudMode('Saved to cloud ✓');
 
         if(prefs.focusDefault) showFocus();
 
-      } else { setCloudMode('Cloud sync on'); if(prefs.focusDefault) showFocus(); }
+      } else {
+        ensureSummerChessStudyDefaults({ persistLocal:true, syncCloud:false });
+        try{ await saveCloudNow(); }catch{}
+        setCloudMode('Cloud sync on');
+        if(prefs.focusDefault) showFocus();
+      }
 
     }catch{ setLocalMode('Cloud read failed'); if(prefs.focusDefault) showFocus(); }
 
@@ -5252,6 +5329,7 @@ onAuthStateChanged(auth, async (user)=>{
       savedFolders = [];
       window.savedOutlines = savedOutlines;
       window.calendarEvents = calendarEvents;
+      ensureSummerChessStudyDefaults({ persistLocal:true, syncCloud:false, force:true });
       saveOutlinesLocal();
       saveFoldersLocal();
       if(typeof renderSavedOutlines==='function') renderSavedOutlines();

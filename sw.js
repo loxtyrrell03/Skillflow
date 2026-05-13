@@ -1,5 +1,5 @@
-const CACHE_NAME = "skillflow-shell-v4";
-const RUNTIME_CACHE = "skillflow-runtime-v4";
+const CACHE_NAME = "skillflow-shell-v5";
+const RUNTIME_CACHE = "skillflow-runtime-v5";
 const APP_SCOPE = new URL(self.registration.scope);
 const normalizeScopedPath = (path = "./") => {
   if (typeof path !== "string") return "./";
@@ -13,7 +13,8 @@ const APP_SHELL = [
   "./index.html",
   "./styles.css?v=20260320b",
   "./calendar.js?v=20260320b",
-  "./saved-outlines.js?v=20260320b",
+  "./saved-outlines.js?v=20260513-summer-chess",
+  "./default-study-plans.js?v=20260513-summer-chess",
   "./pricing-tab.js?v=20260320b",
   "./logo.png",
   "./logo2.png",

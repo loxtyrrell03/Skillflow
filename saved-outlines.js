@@ -1,4 +1,6 @@
 // saved-outlines.js — Saved Outlines manager with desktop-like folders.
+import { DEFAULT_WIDGET_SHELF } from "./default-study-plans.js?v=20260513-summer-chess";
+
 // Exports: setupSavedOutlines({...})
 //
 // Adds:
@@ -889,11 +891,7 @@ export function setupSavedOutlines({
       if(resetBtn){
         if(!setWidgetShelf) return;
         if(!await askConfirm('Reset link shelf to defaults?')) return;
-        const defaults = [
-          { id:'w_lichess',  label:'Lichess',          url:'https://lichess.org',           icon:'img',   img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-          { id:'w_analysis', label:'Lichess Analysis',  url:'https://lichess.org/analysis',  icon:'img',   img:'https://lichess1.org/assets/logo/lichess-favicon-256.png' },
-          { id:'w_chessable',label:'Chessable',        url:'https://www.chessable.com',     icon:'emoji', emoji:'♟️' }
-        ];
+        const defaults = DEFAULT_WIDGET_SHELF.map(item => ({ ...item }));
         setWidgetShelf(defaults);
         renderSavedOutlines();
       }
