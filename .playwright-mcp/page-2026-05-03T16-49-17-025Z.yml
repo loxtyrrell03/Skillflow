@@ -1,0 +1,74 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - button "Skillflow Focused sessions for study and work" [ref=e3] [cursor=pointer]:
+      - generic [ref=e5]:
+        - generic [ref=e6]: Skillflow
+        - generic [ref=e7]: Focused sessions for study and work
+    - navigation [ref=e8]:
+      - link "Overview" [ref=e9] [cursor=pointer]:
+        - /url: "#overview"
+      - link "Session" [ref=e10] [cursor=pointer]:
+        - /url: "#home"
+      - link "Outlines" [ref=e11] [cursor=pointer]:
+        - /url: "#saved"
+      - link "Calendar" [ref=e12] [cursor=pointer]:
+        - /url: "#calendar"
+      - link "How to use" [ref=e13] [cursor=pointer]:
+        - /url: "#help"
+      - link "Pricing" [ref=e14] [cursor=pointer]:
+        - /url: "#pricing"
+    - generic [ref=e15]:
+      - button "⚙️ Settings" [ref=e16] [cursor=pointer]
+      - button "Sign in / Sign up" [ref=e18] [cursor=pointer]
+  - generic [ref=e19]:
+    - generic [ref=e20]:
+      - region "Skillflow overview" [ref=e21]:
+        - img [ref=e22]
+        - generic [ref=e24]:
+          - generic [ref=e25]: Skillflow
+          - heading "Plan the block. Work the block." [level=1] [ref=e26]:
+            - text: Plan the block.
+            - text: Work the block.
+          - paragraph [ref=e27]: Timed sections, links, notes, and progress in one focused session.
+          - generic [ref=e28]:
+            - button "Start a session" [ref=e29] [cursor=pointer]
+            - button "Take the tour" [ref=e30] [cursor=pointer]
+      - region "Skillflow essentials" [ref=e31]:
+        - paragraph [ref=e32]: One clean run from outline to finish.
+        - generic [ref=e33]:
+          - generic [ref=e34]: Outline
+          - generic [ref=e35]: Timer
+          - generic [ref=e36]: Links
+          - generic [ref=e37]: Focus
+      - generic [ref=e38]:
+        - generic [ref=e39]:
+          - generic [ref=e40]: How it moves
+          - heading "A session, not another to-do list." [level=2] [ref=e41]
+          - generic "Skillflow workflow" [ref=e42]:
+            - generic [ref=e43]:
+              - generic [ref=e44]: "01"
+              - strong [ref=e45]: Sketch the order.
+            - generic [ref=e46]:
+              - generic [ref=e47]: "02"
+              - strong [ref=e48]: Add what each step needs.
+            - generic [ref=e49]:
+              - generic [ref=e50]: "03"
+              - strong [ref=e51]: Run it with the clock visible.
+        - generic [ref=e52]:
+          - generic [ref=e53]:
+            - generic [ref=e54]:
+              - generic [ref=e55]: Today
+              - heading "Scheduled" [level=3] [ref=e56]
+              - paragraph [ref=e57]: Sunday 3 May • no outlines scheduled yet
+            - button "Calendar" [ref=e58] [cursor=pointer]
+          - generic [ref=e60]:
+            - generic [ref=e61]: Nothing scheduled yet
+            - generic [ref=e62]: Your overview gets much better once today has a clear plan.
+            - button "Schedule outline" [ref=e63] [cursor=pointer]
+      - generic [ref=e64]:
+        - img [ref=e65]
+        - generic [ref=e67]:
+          - generic [ref=e68]: Keep it visible
+          - heading "Focus Mode. Pop-out. Side panel." [level=2] [ref=e69]
+          - paragraph [ref=e70]: Use the surface that fits the work.
+    - text: Tip
