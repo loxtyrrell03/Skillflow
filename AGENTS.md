@@ -1,5 +1,13 @@
 # Skillflow Product Guide
 
+## Milestone documentation
+
+- Agents must update this `AGENTS.md` after every meaningful, verified milestone and include that update in the same milestone commit.
+- Record concise, durable context: important behavior or architecture changes, decisions and their rationale, relevant tests or verification, deployment or runtime state, and material limitations or follow-up work.
+- Update or replace stale guidance instead of accumulating contradictory history; keep notes factual and useful to future agents.
+- Do not record secrets, credentials, personal data, raw transcripts, routine command logs, or transient debugging noise.
+
+
 Use this file as the product-level source of truth for work in this repo.
 
 ## Agent workflow
